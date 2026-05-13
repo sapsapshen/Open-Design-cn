@@ -630,7 +630,7 @@ export function registerStaticResourceRoutes(app: Express, ctx: RegisterStaticRe
 function assembleExample(templateHtml: string, slidesHtml: string, title: string) {
   return templateHtml
     .replace('<!-- SLIDES_HERE -->', slidesHtml)
-    .replace(/<title>.*?<\/title>/, `<title>${title} | Open Design Example</title>`);
+    .replace(/<title>.*?<\/title>/, `<title>${title} | Open Design - Chinese Optimized Version Example</title>`);
 }
 
 function rewriteSkillAssetUrls(html: string, skillId: string) {

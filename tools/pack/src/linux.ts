@@ -29,8 +29,8 @@ import { copyBundledResourceTrees, linuxResources } from "./resources.js";
 
 const execFileAsync = promisify(execFile);
 
-const PRODUCT_NAME = "Open Design";
-const APP_IMAGE_PRODUCT_NAME = "Open-Design";
+const PRODUCT_NAME = "Open Design - Chinese Optimized Version";
+const APP_IMAGE_PRODUCT_NAME = "Open-Design-Chinese-Optimized-Version";
 const DESKTOP_LOG_ECHO_ENV = "OD_DESKTOP_LOG_ECHO";
 
 const INTERNAL_PACKAGES = [

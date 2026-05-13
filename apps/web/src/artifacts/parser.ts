@@ -14,8 +14,16 @@ export type ArtifactEvent =
   | { type: 'artifact:chunk'; identifier: string; delta: string }
   | { type: 'artifact:end'; identifier: string; fullContent: string };
 
+export interface InferredHtmlArtifact {
+  identifier: string;
+  artifactType: 'text/html';
+  title: string;
+  html: string;
+}
+
 const OPEN_PREFIX = '<artifact';
 const CLOSE_TAG = '</artifact>';
+const HTML_FENCE_RE = /```(?:html)?[^\n]*\n([\s\S]*?)```/gi;
 
 interface ParserState {
   inside: boolean;
@@ -248,4 +256,27 @@ export function createArtifactParser() {
   }
 
   return { feed, flush };
+}
+
+export function inferHtmlArtifactFromText(content: string): InferredHtmlArtifact | null {
+  if (!content) return null;
+  let match: RegExpExecArray | null = HTML_FENCE_RE.exec(content);
+  let html: string | null = null;
+  while (match !== null) {
+    const candidate = (match[1] ?? '').trim();
+    if (
+      /^<!doctype html[\s\S]*<\/html>$/i.test(candidate)
+      || /^<html(?:\s|>)[\s\S]*<\/html>$/i.test(candidate)
+    ) {
+      html = candidate;
+    }
+    match = HTML_FENCE_RE.exec(content);
+  }
+  if (!html) return null;
+  return {
+    identifier: 'artifact',
+    artifactType: 'text/html',
+    title: 'Generated artifact',
+    html,
+  };
 }

@@ -1,6 +1,6 @@
 # Windows Troubleshooting Guide
 
-Open Design runs on Windows natively, but the path is less travelled than macOS, Linux, or WSL2. This guide covers the most common errors you will hit on a fresh Windows machine and the exact fix for each.
+Open Design - Chinese Optimized Version runs on Windows natively, but the path is less travelled than macOS, Linux, or WSL2. This guide covers the most common errors you will hit on a fresh Windows machine and the exact fix for each.
 
 > **Tip:** If you already have WSL2 set up, that is the smoothest path on Windows. This guide is for native Windows (PowerShell).
 
@@ -180,7 +180,7 @@ pnpm tools-dev run web
 Expected output ends with something like:
 
 ```text
-Open Design dev server ready
+Open Design - Chinese Optimized Version dev server ready
   - Local:   http://localhost:17573
 ```
 
@@ -207,7 +207,7 @@ Get-ExecutionPolicy -List
 
 ## Optional: OpenCode agent CLI on Windows
 
-OpenCode is one of the local agent CLIs Open Design can drive. If you want to use it:
+OpenCode is one of the local agent CLIs Open Design - Chinese Optimized Version can drive. If you want to use it:
 
 ```powershell
 npm install -g opencode-ai
@@ -215,4 +215,4 @@ where.exe opencode   # should show C:\Users\YOUR_USERNAME\AppData\Roaming\npm\op
 opencode --version
 ```
 
-If Open Design still shows OpenCode as *not installed* in **Settings → Execution & model**, click **Rescan** after confirming the `opencode.cmd` directory is on your user `PATH`.
+If Open Design - Chinese Optimized Version still shows OpenCode as *not installed* in **Settings → Execution & model**, click **Rescan** after confirming the `opencode.cmd` directory is on your user `PATH`.

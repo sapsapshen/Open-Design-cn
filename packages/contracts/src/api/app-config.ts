@@ -40,6 +40,8 @@ export interface AppConfigPrefs {
   privacyDecisionAt?: number | null;
   orbit?: OrbitConfigPrefs;
   customInstructions?: string | null;
+  wizardDeepseekKey?: string;
+  wizardSiliconflowKey?: string;
 }
 
 export interface AppConfigResponse {

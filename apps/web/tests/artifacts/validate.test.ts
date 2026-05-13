@@ -64,6 +64,25 @@ describe('validateHtmlArtifact', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('rejects full HTML documents that still contain visual placeholder blocks', () => {
+    const html = '<!doctype html><html><body><div class="placeholder-img">chart placeholder</div></body></html>';
+    const result = validateHtmlArtifact(html);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toMatch(/placeholder/i);
+  });
+
+  it('allows visual placeholders when the caller explicitly opts into wireframe mode', () => {
+    const html = '<!doctype html><html><body><div class="placeholder-img">chart placeholder</div></body></html>';
+    const result = validateHtmlArtifact(html, { allowVisualPlaceholders: true });
+    expect(result.ok).toBe(true);
+  });
+
+  it('does not reject normal form placeholder attributes', () => {
+    const html = '<!doctype html><html><body><form><input placeholder="Search" /></form><div>real layout content long enough to pass the structural gate</div></body></html>';
+    const result = validateHtmlArtifact(html);
+    expect(result.ok).toBe(true);
+  });
+
   it('is case-insensitive on the doctype / html tag check', () => {
     const html = '<!DOCTYPE HTML><HTML><BODY><DIV>hello world content</DIV></BODY></HTML>';
     const result = validateHtmlArtifact(html);

@@ -8,7 +8,7 @@ export function registerMediaRoutes(app: Express, ctx: RegisterMediaRoutesDeps) 
   const { sendApiError, requireLocalDaemonRequest, isLocalSameOrigin, resolvedPortRef } = ctx.http;
   const { PROJECT_ROOT, PROJECTS_DIR, RUNTIME_DATA_DIR } = ctx.paths;
   const { randomUUID } = ctx.ids;
-  const { MEDIA_PROVIDERS, IMAGE_MODELS, VIDEO_MODELS, AUDIO_MODELS_BY_KIND, MEDIA_ASPECTS, VIDEO_LENGTHS_SEC, AUDIO_DURATIONS_SEC, readMaskedConfig, writeConfig, generateMedia, createMediaTask, persistMediaTask, appendTaskProgress, notifyTaskWaiters, getLiveMediaTask, mediaTaskSnapshot, listMediaTasksByProject } = ctx.media;
+  const { MEDIA_PROVIDERS, IMAGE_MODELS, MEDIA_ASPECTS, readMaskedConfig, writeConfig, generateMedia, createMediaTask, persistMediaTask, appendTaskProgress, notifyTaskWaiters, getLiveMediaTask, mediaTaskSnapshot, listMediaTasksByProject } = ctx.media;
   const { readAppConfig, writeAppConfig } = ctx.appConfig;
   const { orbitService } = ctx.orbit;
   const { openNativeFolderDialog } = ctx.nativeDialogs;
@@ -21,11 +21,7 @@ export function registerMediaRoutes(app: Express, ctx: RegisterMediaRoutesDeps) 
     res.json({
       providers: MEDIA_PROVIDERS,
       image: IMAGE_MODELS,
-      video: VIDEO_MODELS,
-      audio: AUDIO_MODELS_BY_KIND,
       aspects: MEDIA_ASPECTS,
-      videoLengthsSec: VIDEO_LENGTHS_SEC,
-      audioDurationsSec: AUDIO_DURATIONS_SEC,
     });
   });
 
@@ -158,16 +154,7 @@ export function registerMediaRoutes(app: Express, ctx: RegisterMediaRoutesDeps) 
         prompt: req.body?.prompt,
         output: req.body?.output,
         aspect: req.body?.aspect,
-        length:
-          typeof req.body?.length === 'number' ? req.body.length : undefined,
-        duration:
-          typeof req.body?.duration === 'number'
-            ? req.body.duration
-            : undefined,
-        voice: req.body?.voice,
-        audioKind: req.body?.audioKind,
         language: typeof req.body?.language === 'string' ? req.body.language : undefined,
-        compositionDir: req.body?.compositionDir,
         image: req.body?.image,
         onProgress: (line: any) => appendTaskProgress(task, line),
       })

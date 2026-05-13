@@ -202,13 +202,13 @@ Every prototype / mobile / deck skill ships:
 - ❌ Warm beige / cream / peach / pink / orange-brown page backgrounds unless the user's brand, screenshots, or selected direction explicitly require them
 - ❌ Product artifacts that expose designer settings, viewport selectors, platform toggles, target-count badges, "demo controls", or generated-design metadata as if they were app UI
 
-When you don't have a real value, leave a short honest placeholder (\`—\`, a grey block, a labelled stub) instead of inventing one. An honest placeholder beats a fake stat.
+When you don't have a real value, leave a short honest textual gap marker (\`—\`, \`TBD\`, \`pending source\`) instead of inventing one. Do not use grey/black image blocks, screenshot placeholders, avatar silhouettes, chart stubs, or labelled placeholder panels in a final artifact.
 
 ### D. Variations, not "the answer"
 Default to 2–3 differentiated directions on the same brief — different colour, type personality, rhythm — when the user is exploring. For prototypes mid-flight, prefer Tweaks on a single page over multiplying files.
 
 ### E. Junior-pass first
-Show something visible early, even if it is a wireframe with grey blocks and labelled placeholders. The user redirects cheaply at this stage. Wrap the first pass in a visible artifact and *say* it is a wireframe.
+Show something visible early only when the user explicitly wants a wireframe, lo-fi draft, or first-pass exploration. In that case, wrap the first pass in a visible artifact and *say* it is a wireframe. For high-fidelity or final deliverables, do not ship grey blocks or labelled placeholders as stand-ins for real sections.
 
 ### F. Color and type
 Prefer the active design system's palette OR the chosen direction's palette. If extending, derive harmonious colors with \`oklch()\` instead of inventing hex. The background must be selected from the user's product domain, brand assets, screenshots, or chosen direction — never from generic app chrome or a default cozy canvas. For product utilities, marketplaces, dashboards, and SaaS, start from neutral or brand-colored foundations; do not fall back to warm beige / peach / pink / orange-brown Claude-style canvases just because no brand was provided. Pair a display face with a quieter body face — never let body and display be the same family (the only exception is "tech / utility" direction which is intentionally one family). One accent colour, used at most twice per screen.

@@ -1,8 +1,8 @@
 import type { ApiProtocol } from '../types';
 
 const API_PROTOCOL_LABELS: Record<ApiProtocol, string> = {
-  anthropic: 'Anthropic API',
-  openai: 'OpenAI API',
+  anthropic: 'DeepSeek',
+  openai: 'SiliconFlow',
   azure: 'Azure OpenAI',
   google: 'Google Gemini',
   ollama: 'Ollama Cloud API',

@@ -2,9 +2,9 @@ interface ReactComponentSrcdocOptions {
   title: string;
 }
 
-const REACT_DEV_URL = 'https://unpkg.com/react@18/umd/react.development.js';
-const REACT_DOM_DEV_URL = 'https://unpkg.com/react-dom@18/umd/react-dom.development.js';
-const BABEL_STANDALONE_URL = 'https://unpkg.com/@babel/standalone/babel.min.js';
+const REACT_DEV_URL = 'https://unpkg.zhimg.com/react@18.3.1/umd/react.development.js';
+const REACT_DOM_DEV_URL = 'https://unpkg.zhimg.com/react-dom@18.3.1/umd/react-dom.development.js';
+const BABEL_STANDALONE_URL = 'https://unpkg.zhimg.com/@babel/standalone@7.29.0/babel.min.js';
 
 export function buildReactComponentSrcdoc(
   source: string,

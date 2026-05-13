@@ -362,7 +362,7 @@ If the user asks for something the framework genuinely doesn't support (vertical
 
 Each \`<section class="slide" data-screen-label="NN Title">\` is one slide rendered onto the 1920×1080 canvas. Inside the section, lay out content with your own \`SLOT: per-deck styles\` classes. Slide labels are 1-indexed (\`01 Title\`, \`02 Problem\`…). The first slide gets \`class="slide active"\`; the others just \`class="slide"\`.
 
-Real copy only — no lorem ipsum, no invented metrics, no generic emoji icon rows. If you don't have a value, leave a short honest placeholder.
+Real copy only — no lorem ipsum, no invented metrics, no generic emoji icon rows. If you don't have a value, leave a short honest textual gap marker.
 
 ## Canonical skeleton (this is exactly what the file you write looks like)
 

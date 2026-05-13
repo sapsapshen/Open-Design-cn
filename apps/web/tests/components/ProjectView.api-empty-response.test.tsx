@@ -381,6 +381,39 @@ describe('ProjectView API empty response handling', () => {
     expect(screen.queryByText(/provider ended the request/i)).toBeNull();
     expect(screen.queryByText('empty_response:deepseek-chat')).toBeNull();
   });
+
+  it('recovers a persisted preview from fenced full-document html when the model omits the artifact wrapper', async () => {
+    const fencedHtml = [
+      'Here is the generated deck.',
+      '```html',
+      '<!doctype html>',
+      '<html lang="zh-CN">',
+      '<head><title>Deck</title></head>',
+      '<body><main><h1>Deck</h1><p>Generated design artifact with enough structure to persist.</p></main></body>',
+      '</html>',
+      '```',
+    ].join('\n');
+    mockedStreamMessage.mockImplementation(async (
+      _cfg: AppConfig,
+      _system: string,
+      _history: ChatMessage[],
+      _signal: AbortSignal,
+      handlers: StreamHandlers,
+    ) => {
+      handlers.onDelta(fencedHtml);
+      handlers.onDone('');
+    });
+    renderProjectView();
+
+    await sendTestPrompt();
+
+    await waitFor(() => {
+      expect(hasSavedAssistantMessage((message) => message.runStatus === 'succeeded')).toBe(true);
+    });
+    await waitFor(() => expect(mockedWriteProjectTextFile).toHaveBeenCalled());
+    expect(screen.queryByText(/provider ended the request/i)).toBeNull();
+    expect(screen.queryByText('empty_response:deepseek-chat')).toBeNull();
+  });
 });
 
 async function sendTestPrompt() {

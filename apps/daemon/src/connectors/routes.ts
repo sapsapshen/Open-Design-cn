@@ -291,7 +291,7 @@ function renderConnectorConnectedHtml(connectorId: string): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${connectorLabelHtml} connected · Open Design</title>
+    <title>${connectorLabelHtml} connected · Open Design - Chinese Optimized Version</title>
     <style>
       :root {
         --bg: #faf9f7;
@@ -444,9 +444,9 @@ function renderConnectorConnectedHtml(connectorId: string): string {
   </head>
   <body>
     <main aria-labelledby="callback-title">
-      <div class="chrome" aria-label="Open Design">
+      <div class="chrome" aria-label="Open Design - Chinese Optimized Version">
         <span class="brand-mark" aria-hidden="true">OD</span>
-        <span class="brand-title">Open Design</span>
+        <span class="brand-title">Open Design - Chinese Optimized Version</span>
       </div>
       <section class="content">
         <div class="status-icon" aria-hidden="true">
@@ -456,7 +456,7 @@ function renderConnectorConnectedHtml(connectorId: string): string {
         </div>
         <div>
           <h1 id="callback-title">${connectorLabelHtml} connected</h1>
-          <p>Your connector is ready to use in Open Design.</p>
+          <p>Your connector is ready to use in Open Design - Chinese Optimized Version.</p>
         </div>
         <div class="summary" role="status">
           <span class="summary-label">
@@ -478,7 +478,7 @@ function renderConnectorConnectedHtml(connectorId: string): string {
         const hint = document.getElementById('auto-close-hint');
         function showManualCloseHint() {
           closeButton.textContent = 'Close this tab manually';
-          hint.textContent = 'Your browser blocked automatic closing. You can close this tab and return to Open Design.';
+          hint.textContent = 'Your browser blocked automatic closing. You can close this tab and return to Open Design - Chinese Optimized Version.';
         }
         function hasLiveOpener() {
           try {
@@ -511,10 +511,10 @@ function renderConnectorConnectedHtml(connectorId: string): string {
             window.opener.postMessage(message, '*');
             window.setTimeout(requestClose, 900);
           } else {
-            hint.textContent = 'You can close this tab and return to Open Design.';
+            hint.textContent = 'You can close this tab and return to Open Design - Chinese Optimized Version.';
           }
         } catch {
-          hint.textContent = 'You can close this tab and return to Open Design.';
+          hint.textContent = 'You can close this tab and return to Open Design - Chinese Optimized Version.';
         }
         closeButton.addEventListener('click', requestClose);
       })();

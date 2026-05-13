@@ -54,9 +54,9 @@ type ProjectMetadata = {
   imageAspect?: string | null;
   imageStyle?: string | null;
   videoModel?: string | null;
-  videoLength?: number | null;
   videoAspect?: string | null;
-  audioKind?: string | null;
+  videoLength?: number | null;
+  audioKind?: 'music' | 'speech' | 'sfx' | null;
   audioModel?: string | null;
   audioDuration?: number | null;
   voice?: string | null;
@@ -304,11 +304,7 @@ export function composeSystemPrompt({
 
   const isMediaSurface =
     skillMode === 'image' ||
-    skillMode === 'video' ||
-    skillMode === 'audio' ||
-    metadata?.kind === 'image' ||
-    metadata?.kind === 'video' ||
-    metadata?.kind === 'audio';
+    metadata?.kind === 'image';
   if (isMediaSurface) {
     parts.push(MEDIA_GENERATION_CONTRACT);
   }
@@ -329,7 +325,7 @@ export function composeSystemPrompt({
   // needs to opt in.
   //
   // The panel block requires <ARTIFACT mime="text/html"> inside <CRITIQUE_RUN>,
-  // which conflicts with MEDIA_GENERATION_CONTRACT (image/video/audio surfaces
+  // which conflicts with MEDIA_GENERATION_CONTRACT (image surfaces
   // explicitly forbid HTML output). Skip the addendum on media surfaces so
   // the critique flag is a no-op there until a media-aware panel template
   // lands.
@@ -534,7 +530,7 @@ function renderMetadataBlock(
       '- **screen-file-first rule**: each distinct user-facing screen or surface MUST be delivered as its own HTML file unless the user explicitly asks for a single-page scroll or single-file artifact. Do not combine landing pages, product app screens, dashboards, history, pricing, settings, mobile app, tablet app, desktop app, or OS widget surfaces into one long page. Use `index.html` as a launcher/overview that links to screen files when more than one screen exists; it may summarize the product and show screen cards, but it must not contain the full design for every screen.',
     );
     lines.push(
-      '- **product-realism rule**: final artifacts must look like real end-user product UI. Do not render project metadata, screen counts, target counts, state counts, "demo only" labels, "settings" panels for choosing platforms, "full design target" badges, viewport/device selector controls, theme/style knobs, platform output maps, behavior-spec sections, or design-process cards inside the product unless the user explicitly asks for a design spec/dashboard. Any navigation/tabs inside the artifact must be real product navigation, not designer controls for switching generated mockups.',
+      '- **product-realism rule**: final artifacts must look like real end-user product UI. Do not render project metadata, screen counts, target counts, state counts, "demo only" labels, "settings" panels for choosing platforms, "full design target" badges, viewport/device selector controls, theme/style knobs, platform output maps, behavior-spec sections, or design-process cards inside the product unless the user explicitly asks for a design spec/dashboard. Any navigation/tabs inside the artifact must be real product navigation, not designer controls for switching generated mockups. Do not ship black/grey placeholder rectangles, screenshot placeholders, avatar silhouettes, chart stubs, or labelled placeholder panels in the final artifact. If source imagery or data is missing, solve the section with typography, abstract graphic composition, real tables, or by omitting the module entirely.',
     );
     lines.push(
       '- **visual-system rule**: when the user does not specify colors, layout, or visual direction, you must still make an intentional product-appropriate visual system. Infer a palette from the product category and audience with at least: neutral surface tokens, a primary action color, a secondary/domain accent, and status colors. Avoid plain monochrome/unstyled greyscale outputs. Use tasteful gradients, illustrations, iconography, device/product mockups, and colored state moments where they clarify the product, while still avoiding generic beige/peach/pink/brown AI washes.',
@@ -608,53 +604,6 @@ function renderMetadataBlock(
       'This is an **image** project. Plan the prompt carefully, then dispatch via the **media generation contract** using `"$OD_NODE_BIN" "$OD_BIN" media generate --surface image --model <imageModel>`. Do NOT emit `<artifact>` HTML for media surfaces.',
     );
   }
-  if (metadata.kind === 'video') {
-    lines.push(
-      `- **videoModel**: ${metadata.videoModel ?? '(unknown — ask: which video model to use)'}`,
-    );
-    lines.push(
-      `- **lengthSeconds**: ${typeof metadata.videoLength === 'number' ? metadata.videoLength : '(unknown — ask: 3s / 5s / 10s)'}`,
-    );
-    lines.push(
-      `- **aspectRatio**: ${metadata.videoAspect ?? '(unknown — ask: 16:9, 9:16, 1:1)'}`,
-    );
-    if (
-      metadata.promptTemplate?.title &&
-      typeof metadata.promptTemplate.prompt === 'string' &&
-      metadata.promptTemplate.prompt.trim().length > 0
-    ) {
-      lines.push(`- **referenceTemplate**: ${metadata.promptTemplate.title}`);
-    }
-    lines.push('');
-    lines.push(
-      'This is a **video** project. Plan the shotlist and motion, then dispatch via the **media generation contract** using `"$OD_NODE_BIN" "$OD_BIN" media generate --surface video --model <videoModel> --length <seconds> --aspect <ratio>`. Do NOT emit `<artifact>` HTML.',
-    );
-    if (metadata.videoModel === 'hyperframes-html') {
-      lines.push(
-        'Special case: `hyperframes-html` is a local HTML-to-MP4 renderer, not a photoreal text-to-video model. Treat it like a motion design renderer, ask at most one clarifying question, then dispatch immediately.',
-      );
-    }
-  }
-  if (metadata.kind === 'audio') {
-    lines.push(
-      `- **audioKind**: ${metadata.audioKind ?? '(unknown — ask: music / speech / sfx)'}`,
-    );
-    lines.push(
-      `- **audioModel**: ${metadata.audioModel ?? '(unknown — ask: which audio model to use)'}`,
-    );
-    lines.push(
-      `- **durationSeconds**: ${typeof metadata.audioDuration === 'number' ? metadata.audioDuration : '(unknown — ask: target duration)'}`,
-    );
-    if (metadata.voice) {
-      lines.push(`- **voice**: ${metadata.voice}`);
-    } else if (metadata.audioKind === 'speech') {
-      lines.push('- **voice**: (unknown — ask: voice id / accent / pacing)');
-    }
-    lines.push('');
-    lines.push(
-      'This is an **audio** project. Lock the content intent first, then dispatch via the **media generation contract** using `"$OD_NODE_BIN" "$OD_BIN" media generate --surface audio --audio-kind <kind> --model <audioModel> --duration <seconds>` and add `--voice <voice-id>` for speech when you have a provider-specific voice id. Do NOT emit `<artifact>` HTML.',
-    );
-  }
 
   if (metadata.inspirationDesignSystemIds && metadata.inspirationDesignSystemIds.length > 0) {
     lines.push(
@@ -662,13 +611,13 @@ function renderMetadataBlock(
     );
   }
 
-  // Curated prompt template reference for image/video projects. Inlined
+  // Curated prompt template reference for image projects. Inlined
   // verbatim (with light truncation) so the agent can borrow structure,
   // mood and phrasing without a separate fetch. The user may have edited
   // the body before clicking Create — those edits land here and are now
   // authoritative for the brief.
   if (
-    (metadata.kind === 'image' || metadata.kind === 'video') &&
+    metadata.kind === 'image' &&
     metadata.promptTemplate &&
     typeof metadata.promptTemplate.prompt === 'string' &&
     metadata.promptTemplate.prompt.trim().length > 0

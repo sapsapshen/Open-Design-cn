@@ -5,7 +5,6 @@ import type {
   AgentTestRequest,
   AppVersionInfo,
   AppVersionResponse,
-  AudioKind,
   ChatAttachment,
   ChatCommentAttachment,
   ChatMessageFeedback,
@@ -295,6 +294,9 @@ export interface AppConfig {
   // least once (saved or skipped). Bootstrap skips the auto-popup when
   // this is set so refreshing the page doesn't re-prompt.
   onboardingCompleted?: boolean;
+  wizardCompleted?: boolean;
+  wizardDeepseekKey?: string;
+  wizardSiliconflowKey?: string;
   mediaProviders?: Record<string, MediaProviderCredentials>;
   composio?: ComposioSettings;
   // Per-CLI model picker state, keyed by agent id (e.g. `gemini`, `codex`).
@@ -426,7 +428,6 @@ export type {
   AgentTestRequest,
   AppVersionInfo,
   AppVersionResponse,
-  AudioKind,
   ConnectionTestKind,
   ConnectionTestProtocol,
   ConnectionTestRequest,

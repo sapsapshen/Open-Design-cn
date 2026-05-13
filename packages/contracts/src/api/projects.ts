@@ -11,6 +11,8 @@ export type ProjectKind =
 
 export type MediaAspect = '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
 
+export type AudioKind = 'music' | 'speech' | 'sfx';
+
 export type ProjectPlatform =
   | 'auto'
   | 'responsive'
@@ -20,7 +22,6 @@ export type ProjectPlatform =
   | 'tablet'
   | 'desktop-app';
 
-export type AudioKind = 'music' | 'speech' | 'sfx';
 
 export type ProjectDisplayStatus =
   | 'not_started'
@@ -107,7 +108,7 @@ export interface ProjectMetadata {
   audioModel?: string;
   audioDuration?: number;
   voice?: string;
-  // Curated prompt template the user picked in the image/video tab of the
+  // Curated prompt template the user picked in the image tab of the
   // New Project panel. Treated by the system-prompt composer as a stylistic
   // and structural reference for the generation request.
   promptTemplate?: PromptTemplateMetadata;

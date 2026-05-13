@@ -124,7 +124,7 @@ export const DESIGN_DIRECTIONS: DesignDirection[] = [
       'comfortable radii (12–18px) paired with crisp grid alignment',
       'primary action color plus a secondary/domain accent and clear status colors; use color to separate panels, states, and product moments',
       'subtle elevation only on interactive cards; tasteful gradients/glows are allowed for hero/device/product moments, never as a full-page beige/pastel wash',
-      'avoid generic pastel/beige gradients; use real product screenshots, data, or labelled placeholders',
+      'avoid generic pastel/beige gradients; use real product screenshots, data, or textual gap markers such as TBD when source material is missing',
     ],
   },
   {

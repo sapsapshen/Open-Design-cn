@@ -20,7 +20,8 @@
  * daemon/media-models.js (kept in sync by review).
  */
 
-import type { AudioKind, MediaAspect } from '../types';
+import type { MediaAspect } from '../types';
+export type AudioKind = 'music' | 'speech' | 'sfx';
 
 /**
  * Provider identifier — used both as a grouping key in the picker and as
@@ -339,89 +340,12 @@ export const IMAGE_MODELS: MediaModel[] = [
  * Seedance Lite), kling.ts and friends.
  */
 export const VIDEO_MODELS: MediaModel[] = [
-  // Volcengine — Seedance 2.0 (integrated).
-  {
-    id: 'doubao-seedance-2-0-260128',
-    label: 'seedance-2.0',
-    hint: 'ByteDance · t2v + i2v + audio',
-    provider: 'volcengine',
-    caps: ['t2v', 'i2v', 'audio'],
-    default: true,
-  },
-  {
-    id: 'doubao-seedance-2-0-fast-260128',
-    label: 'seedance-2.0-fast',
-    hint: 'ByteDance · faster, cheaper',
-    provider: 'volcengine',
-    caps: ['t2v', 'i2v', 'audio'],
-  },
-  {
-    id: 'doubao-seedance-1-0-pro-250528',
-    label: 'seedance-1.0-pro',
-    hint: 'ByteDance · 1.0',
-    provider: 'volcengine',
-    caps: ['t2v', 'i2v'],
-  },
-  {
-    id: 'doubao-seedance-1-0-lite-i2v-250428',
-    label: 'seedance-1.0-lite-i2v',
-    hint: 'ByteDance · image-to-video',
-    provider: 'volcengine',
-    caps: ['i2v'],
-  },
-  {
-    id: 'doubao-seedance-1-0-lite-t2v-250428',
-    label: 'seedance-1.0-lite-t2v',
-    hint: 'ByteDance · text-to-video',
-    provider: 'volcengine',
-    caps: ['t2v'],
-  },
-
-  // xAI Grok Imagine — 720p t2v + i2v with natively generated audio.
-  {
-    id: 'grok-imagine-video',
-    label: 'grok-imagine-video',
-    hint: 'xAI · 720p t2v + i2v + native audio',
-    provider: 'grok',
-    caps: ['t2v', 'i2v', 'audio'],
-  },
-
-  // Kuaishou Kling.
-  { id: 'kling-2.0', label: 'kling-2.0', hint: 'Kuaishou · latest', provider: 'kling', caps: ['t2v', 'i2v'] },
-  { id: 'kling-1.6', label: 'kling-1.6', hint: 'Kuaishou', provider: 'kling', caps: ['t2v', 'i2v'] },
-  { id: 'kling-1.5', label: 'kling-1.5', hint: 'Kuaishou', provider: 'kling', caps: ['t2v', 'i2v'] },
-
-  // Google Veo.
-  { id: 'veo-3', label: 'veo-3', hint: 'Google · sound-on', provider: 'google', caps: ['t2v', 'audio'] },
-  { id: 'veo-2', label: 'veo-2', hint: 'Google', provider: 'google', caps: ['t2v'] },
-
-  // OpenAI Sora (via Fal hosting today).
-  { id: 'sora-2', label: 'sora-2', hint: 'OpenAI · via Fal', provider: 'fal', caps: ['t2v'] },
-  { id: 'sora-2-pro', label: 'sora-2-pro', hint: 'OpenAI · via Fal', provider: 'fal', caps: ['t2v'] },
-
-  // MiniMax video.
-  { id: 'minimax-video-01', label: 'video-01', hint: 'MiniMax · Hailuo', provider: 'minimax', caps: ['t2v', 'i2v'] },
-  { id: 'hyperframes-html', label: 'hyperframes-html', hint: 'HyperFrames · local HTML renderer', provider: 'hyperframes', caps: ['t2v'] },
 ];
 
 export const AUDIO_MODELS_BY_KIND: Record<AudioKind, MediaModel[]> = {
-  music: [
-    { id: 'suno-v5', label: 'suno-v5', hint: 'Suno · default', provider: 'suno', caps: ['music'], default: true },
-    { id: 'suno-v4-5', label: 'suno-v4.5', hint: 'Suno', provider: 'suno', caps: ['music'] },
-    { id: 'udio-v2', label: 'udio-v2', hint: 'Udio', provider: 'udio', caps: ['music'] },
-    { id: 'lyria-2', label: 'lyria-2', hint: 'Google', provider: 'google', caps: ['music'] },
-  ],
-  speech: [
-    { id: 'gpt-4o-mini-tts', label: 'gpt-4o-mini-tts', hint: 'OpenAI · expressive TTS', provider: 'openai', caps: ['tts'] },
-    { id: 'minimax-tts', label: 'minimax-tts', hint: 'MiniMax · default', provider: 'minimax', caps: ['tts'], default: true },
-    { id: 'fish-speech-2', label: 'fish-speech-2', hint: 'FishAudio', provider: 'fishaudio', caps: ['tts', 'voice-clone'] },
-    { id: 'elevenlabs-v3', label: 'elevenlabs-v3', hint: 'ElevenLabs', provider: 'elevenlabs', caps: ['tts', 'voice-clone'] },
-    { id: 'doubao-tts', label: 'doubao-tts', hint: 'Volcengine · TTS', provider: 'volcengine', caps: ['tts'] },
-  ],
-  sfx: [
-    { id: 'elevenlabs-sfx', label: 'elevenlabs-sfx', hint: 'ElevenLabs SFX', provider: 'elevenlabs', caps: ['sfx'], default: true },
-    { id: 'audiocraft', label: 'audiocraft', hint: 'Meta · open', provider: 'replicate', caps: ['sfx', 'music'] },
-  ],
+  music: [],
+  speech: [],
+  sfx: [],
 };
 
 export const MEDIA_ASPECTS: MediaAspect[] = ['1:1', '16:9', '9:16', '4:3', '3:4'];
@@ -431,18 +355,11 @@ export const AUDIO_DURATIONS_SEC: number[] = [5, 10, 15, 30, 60, 120];
 
 export const DEFAULT_IMAGE_MODEL =
   IMAGE_MODELS.find((m) => m.default)?.id ?? IMAGE_MODELS[0]!.id;
-export const DEFAULT_VIDEO_MODEL =
-  VIDEO_MODELS.find((m) => m.default)?.id ?? VIDEO_MODELS[0]!.id;
+export const DEFAULT_VIDEO_MODEL = null;
 export const DEFAULT_AUDIO_MODEL: Record<AudioKind, string> = {
-  music:
-    AUDIO_MODELS_BY_KIND.music.find((m) => m.default)?.id
-    ?? AUDIO_MODELS_BY_KIND.music[0]!.id,
-  speech:
-    AUDIO_MODELS_BY_KIND.speech.find((m) => m.default)?.id
-    ?? AUDIO_MODELS_BY_KIND.speech[0]!.id,
-  sfx:
-    AUDIO_MODELS_BY_KIND.sfx.find((m) => m.default)?.id
-    ?? AUDIO_MODELS_BY_KIND.sfx[0]!.id,
+  music: '',
+  speech: '',
+  sfx: '',
 };
 
 /**
@@ -466,19 +383,10 @@ export function findProvider(id: MediaProviderId): MediaProvider | null {
 }
 
 /** All model IDs grouped by surface, used for prompt-side disclosure. */
-export function modelIdsBySurface(): {
-  image: string[];
-  video: string[];
-  audio: { music: string[]; speech: string[]; sfx: string[] };
-} {
+
+export function modelIdsBySurface(): { image: string[] } {
   return {
-    image: IMAGE_MODELS.map((m) => m.id),
-    video: VIDEO_MODELS.map((m) => m.id),
-    audio: {
-      music: AUDIO_MODELS_BY_KIND.music.map((m) => m.id),
-      speech: AUDIO_MODELS_BY_KIND.speech.map((m) => m.id),
-      sfx: AUDIO_MODELS_BY_KIND.sfx.map((m) => m.id),
-    },
+    image: IMAGE_MODELS.map((m: MediaModel) => m.id),
   };
 }
 

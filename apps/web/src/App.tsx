@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EntryView } from './components/EntryView';
+import { LaunchWizard, type WizardKeys } from './components/LaunchWizard';
 import type { CreateInput } from './components/NewProjectPanel';
 import { MemoryToast } from './components/MemoryToast';
 import { PetOverlay } from './components/pet/PetOverlay';
@@ -27,6 +28,7 @@ import {
   hasAnyConfiguredProvider,
   fetchComposioConfigFromDaemon,
   loadConfig,
+  applyLaunchWizardKeys,
   mergeDaemonConfig,
   mergeDaemonMediaProviders,
   saveConfig,
@@ -391,25 +393,6 @@ export function App() {
       cancelled = true;
     };
   }, []);
-
-  // Auto-pick the first available agent once both the daemon-stored config
-  // and the agents listing have landed. Splitting this out of bootstrap
-  // avoids racing the local-config initial value against a slow agents
-  // probe — by the time this runs, daemonConfig has already overlaid the
-  // user's previous choice, so we only fill an empty slot.
-  useEffect(() => {
-    if (!daemonConfigLoaded || agentsLoading) return;
-    if (config.agentId) return;
-    const firstAvailable = agents.find((a) => a.available);
-    if (!firstAvailable) return;
-    setConfig((prev) => {
-      if (prev.agentId) return prev;
-      const next: AppConfig = { ...prev, agentId: firstAvailable.id };
-      saveConfig(next);
-      void syncConfigToDaemon(next);
-      return next;
-    });
-  }, [daemonConfigLoaded, agentsLoading, agents, config.agentId]);
 
   // Auto-pick the default design system the same way — only after daemon
   // config has merged so we never overwrite a daemon-stored selection.
@@ -779,6 +762,30 @@ export function App() {
     setSettingsOpen(true);
   }, []);
 
+  const handleLaunchWizardComplete = useCallback(
+    async (keys: WizardKeys) => {
+      const next = applyLaunchWizardKeys(latestPersistedConfigRef.current, keys);
+      await handleConfigPersist(next);
+      setSettingsWelcome(false);
+      setSettingsOpen(false);
+    },
+    [handleConfigPersist],
+  );
+
+  const handleLaunchWizardSkip = useCallback(() => {
+    const next = {
+      ...latestPersistedConfigRef.current,
+      onboardingCompleted: true,
+      wizardCompleted: true,
+    };
+    latestPersistedConfigRef.current = next;
+    saveConfig(next);
+    void syncConfigToDaemon(next);
+    setConfig(next);
+    setSettingsWelcome(false);
+    setSettingsOpen(false);
+  }, []);
+
   // Cmd+, (mac) / Ctrl+, (win/linux) opens Settings. Capture phase so we
   // beat the browser's default Preferences dialog. Platform-gated so
   // meta/ctrl don't conflict across OS.
@@ -959,13 +966,19 @@ export function App() {
         onTuck={handleTuckPet}
         onOpenSettings={openPetSettings}
       />
-      {settingsOpen ? (
+      {settingsOpen && settingsWelcome ? (
+        <LaunchWizard
+          onComplete={(keys) => void handleLaunchWizardComplete(keys)}
+          onSkip={handleLaunchWizardSkip}
+        />
+      ) : null}
+      {settingsOpen && !settingsWelcome ? (
         <SettingsDialog
           initial={config}
           agents={agents}
           daemonLive={daemonLive}
           appVersionInfo={appVersionInfo}
-          welcome={settingsWelcome}
+          welcome={false}
           initialSection={settingsInitialSection}
           composioConfigLoading={composioConfigLoading}
           onPersist={handleConfigPersist}

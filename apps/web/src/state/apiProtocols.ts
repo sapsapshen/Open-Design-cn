@@ -21,13 +21,13 @@ import type { ApiProtocol } from '../types';
 // the user types in the model field is what's variable, not the API.
 export const SUGGESTED_MODELS_BY_PROTOCOL: Record<ApiProtocol, readonly string[]> = {
   anthropic: [
-    'claude-opus-4-5',
-    'claude-sonnet-4-5',
-    'claude-haiku-4-5',
     'deepseek-chat',
     'deepseek-reasoner',
     'deepseek-v4-flash',
     'deepseek-v4-pro',
+    'claude-opus-4-5',
+    'claude-sonnet-4-5',
+    'claude-haiku-4-5',
     'MiniMax-M2.7-highspeed',
     'MiniMax-M2.7',
     'MiniMax-M2.5-highspeed',
@@ -38,22 +38,11 @@ export const SUGGESTED_MODELS_BY_PROTOCOL: Record<ApiProtocol, readonly string[]
     'mimo-v2.5-pro',
   ],
   openai: [
-    'gpt-4o',
-    'gpt-4o-mini',
-    'o3',
-    'o4-mini',
-    'deepseek-chat',
-    'deepseek-reasoner',
-    'deepseek-v4-flash',
-    'deepseek-v4-pro',
-    'MiniMax-M2.7-highspeed',
-    'MiniMax-M2.7',
-    'MiniMax-M2.5-highspeed',
-    'MiniMax-M2.5',
-    'MiniMax-M2.1-highspeed',
-    'MiniMax-M2.1',
-    'MiniMax-M2',
-    'mimo-v2.5-pro',
+    'Qwen/Qwen2.5-7B-Instruct',
+    'Qwen/Qwen2.5-14B-Instruct',
+    'Qwen/Qwen2.5-32B-Instruct',
+    'deepseek-ai/DeepSeek-V3',
+    'deepseek-ai/DeepSeek-R1',
   ],
   azure: [
     'gpt-4o',
@@ -113,8 +102,8 @@ export const SUGGESTED_MODELS_BY_PROTOCOL: Record<ApiProtocol, readonly string[]
 // your OpenAI key") and by anyone else who needs a one-pick default
 // that prioritises latency + cost over reasoning depth.
 export const FAST_MODEL_BY_PROTOCOL: Record<ApiProtocol, string> = {
-  anthropic: 'claude-haiku-4-5',
-  openai: 'gpt-4o-mini',
+  anthropic: 'deepseek-chat',
+  openai: 'Qwen/Qwen2.5-7B-Instruct',
   azure: 'gpt-4o-mini',
   google: 'gemini-2.0-flash',
   // Ollama Cloud doesn't have a clean "fast small model" default that
@@ -129,16 +118,13 @@ export const API_PROTOCOL_TABS: ReadonlyArray<{
   id: ApiProtocol;
   title: string;
 }> = [
-  { id: 'anthropic', title: 'Anthropic' },
-  { id: 'openai', title: 'OpenAI' },
-  { id: 'azure', title: 'Azure OpenAI' },
-  { id: 'google', title: 'Google Gemini' },
-  { id: 'ollama', title: 'Ollama Cloud' },
+  { id: 'anthropic', title: 'DeepSeek' },
+  { id: 'openai', title: 'SiliconFlow' },
 ];
 
 export const API_PROTOCOL_LABELS: Record<ApiProtocol, string> = {
-  anthropic: 'Anthropic API',
-  openai: 'OpenAI API',
+  anthropic: 'DeepSeek',
+  openai: 'SiliconFlow',
   azure: 'Azure OpenAI',
   google: 'Google Gemini',
   ollama: 'Ollama Cloud API',

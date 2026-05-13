@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { createHtmlArtifactManifest, inferLegacyManifest } from '../artifacts/manifest';
 import { validateHtmlArtifact } from '../artifacts/validate';
-import { createArtifactParser } from '../artifacts/parser';
+import { createArtifactParser, inferHtmlArtifactFromText } from '../artifacts/parser';
 import { useT } from '../i18n';
 import { streamMessage } from '../providers/anthropic';
 import {
@@ -1475,6 +1475,18 @@ export function ProjectView({
               setArtifact((prev) => (prev ? { ...prev, html: ev.fullContent } : null));
             }
           }
+          if (!liveHtml.trim()) {
+            const inferredArtifact = inferHtmlArtifactFromText(fullText || streamedText);
+            if (
+              inferredArtifact &&
+              validateHtmlArtifact(inferredArtifact.html, {
+                allowVisualPlaceholders: project.metadata?.fidelity === 'wireframe',
+              }).ok
+            ) {
+              liveHtml = inferredArtifact.html;
+              setArtifact(inferredArtifact);
+            }
+          }
           const emptyApiResponse =
             config.mode === 'api' &&
             !fullText.trim() &&
@@ -1744,7 +1756,9 @@ export function ProjectView({
       // when only Edit-tool changes happened this turn. Without this guard,
       // such content lands as a phantom HTML file in the project panel.
       if (ext === '.html') {
-        const validation = validateHtmlArtifact(art.html);
+        const validation = validateHtmlArtifact(art.html, {
+          allowVisualPlaceholders: project.metadata?.fidelity === 'wireframe',
+        });
         if (!validation.ok) {
           setError(`Refused to save artifact "${art.identifier || art.title || 'untitled'}": ${validation.reason}`);
           return;

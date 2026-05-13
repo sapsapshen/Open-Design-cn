@@ -430,7 +430,9 @@ export function shapeLiveArtifactTemplate(
     .replace(/\s*[·•]\s*live[\s-]artifact\s+template$/i, '')
     .trim();
 
-  const summary = extractFirstProseParagraph(body) || 'Open Design Live Artifact template.';
+  const summary =
+    extractFirstProseParagraph(body) ||
+    'Open Design - Chinese Optimized Version Live Artifact template.';
 
   const liveSlug = `live-${slug}`;
   return {

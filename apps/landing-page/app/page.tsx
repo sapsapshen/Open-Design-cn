@@ -132,7 +132,7 @@ export default function Page({ counts }: PageProps) {
       {/* side rails (rotated brand text) */}
       <div className='side-rail right' data-od-id='rail-right'>
         <span className='rail-text'>
-          Open Design — Vol. 01 · Issue Nº 26 · Apache-2.0
+          Open Design - Chinese Optimized Version — Vol. 01 · Issue Nº 26 · Apache-2.0
         </span>
       </div>
       <div className='side-rail left' data-od-id='rail-left'>
@@ -251,7 +251,7 @@ export default function Page({ counts }: PageProps) {
               <span className='annot annot-bl coord'>SHA · a1b2c3d</span>
               <span className='annot annot-br'>
                 Composed in{NBSP}
-                <span style={{ color: 'var(--coral)' }}>Open Design</span>
+                <span style={{ color: 'var(--coral)' }}>Open Design - Chinese Optimized Version</span>
               </span>
               <img src={heroImage} alt='' />
               <div className='index'>
@@ -294,7 +294,7 @@ export default function Page({ counts }: PageProps) {
               <span className='meta-grp'>
                 <span>About / Manifesto</span>
                 <span className='dot-mark'>•</span>
-                <span>Open Design / Volume 01</span>
+                <span>Open Design - Chinese Optimized Version / Volume 01</span>
               </span>
               <span>002 / 008</span>
             </div>
@@ -344,7 +344,7 @@ export default function Page({ counts }: PageProps) {
                 </div>
                 <div className='about-caption'>
                   <b>Studies in form · perception · machine imagination.</b>
-                  (Open Design, MMXXVI)
+                  (Open Design - Chinese Optimized Version, MMXXVI)
                 </div>
               </div>
             </div>
@@ -373,7 +373,7 @@ export default function Page({ counts }: PageProps) {
                 <span className='corner br' />
                 <img src={imageAsset('capabilities.png', { width: 1024, quality: 82 })} alt='' />
                 <div className='ribbon'>
-                  <b>OPEN DESIGN</b>
+                  <b>OPEN DESIGN - CHINESE OPTIMIZED VERSION</b>
                   {NBSP}·{NBSP}CAPABILITIES MATRIX{NBSP}·{NBSP}OD/26
                 </div>
               </div>
@@ -774,7 +774,7 @@ export default function Page({ counts }: PageProps) {
               <span style={{ display: 'inline-flex', gap: 24 }}>
                 <span>Selected Work · 2026 Catalog</span>
                 <span style={{ color: 'var(--coral)' }}>•</span>
-                <span>Edited by Open Design</span>
+                <span>Edited by Open Design - Chinese Optimized Version</span>
               </span>
               <span>006 / 008</span>
             </div>
@@ -885,7 +885,7 @@ export default function Page({ counts }: PageProps) {
                   Collaborators <span className='ix'>· Nº 06</span>
                 </span>
                 <h2 style={{ marginTop: 30 }}>
-                  &ldquo;Open Design helped us turn vague <em>AI ideas</em> into
+                  &ldquo;Open Design - Chinese Optimized Version helped us turn vague <em>AI ideas</em> into
                   a visual system that felt <em>sharp, believable,</em> and
                   genuinely new.&rdquo;
                 </h2>
@@ -1062,7 +1062,7 @@ export default function Page({ counts }: PageProps) {
                 <img src={imageAsset('cta.png', { width: 1024, quality: 82 })} alt='' />
                 <div className='index'>Nº 08</div>
                 <div className='ribbon'>
-                  OPEN DESIGN{NBSP}·{NBSP}FIN.
+                  OPEN DESIGN - CHINESE OPTIMIZED VERSION{NBSP}·{NBSP}FIN.
                 </div>
               </div>
             </div>
@@ -1076,7 +1076,7 @@ export default function Page({ counts }: PageProps) {
               <div className='foot-brand'>
                 <a href='#top' className='brand'>
                   <span className='brand-mark'>Ø</span>
-                  <span>Open Design</span>
+                  <span>Open Design - Chinese Optimized Version</span>
                 </a>
                 <p style={{ marginTop: 18 }}>
                   The open-source alternative to Claude Design. Built on the
@@ -1117,7 +1117,7 @@ export default function Page({ counts }: PageProps) {
                 <a
                   className='foot-cta'
                   href={REPO_RELEASES}
-                  aria-label='Download the Open Design desktop app'
+                  aria-label='Download the Open Design - Chinese Optimized Version desktop app'
                   {...ext}
                 >
                   Download desktop
@@ -1218,7 +1218,7 @@ export default function Page({ counts }: PageProps) {
             <div className='foot-bottom'>
               <span>
                 <span className='pulse' />●{' '}
-                <b style={{ color: 'var(--ink)' }}>Open Design</b> · Apache-2.0
+                <b style={{ color: 'var(--ink)' }}>Open Design - Chinese Optimized Version</b> · Apache-2.0
                 · 2026 / Volume 01 / Issue Nº 26
               </span>
               <span className='right'>
@@ -1229,7 +1229,7 @@ export default function Page({ counts }: PageProps) {
             </div>
             <div className='foot-mega'>
               <div className='word' data-reveal='rise-lg'>
-                Open <em>Design</em>.
+                Open Design - <em>Chinese Optimized Version</em>.
               </div>
             </div>
           </div>

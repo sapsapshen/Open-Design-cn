@@ -12,7 +12,7 @@ import type { Dict } from '../i18n/types';
 import { fetchPromptTemplate } from '../providers/registry';
 import { isStoredMediaProviderEntryPresent } from '../state/config';
 import type {
-  AudioKind,
+
   DesignSystemSummary,
   MediaAspect,
   ProjectKind,
@@ -24,17 +24,11 @@ import type {
   SkillSummary,
 } from '../types';
 import {
-  AUDIO_DURATIONS_SEC,
-  AUDIO_MODELS_BY_KIND,
-  DEFAULT_AUDIO_MODEL,
   DEFAULT_IMAGE_MODEL,
-  DEFAULT_VIDEO_MODEL,
   findProvider,
   IMAGE_MODELS,
   MEDIA_ASPECTS,
   type MediaModel,
-  VIDEO_LENGTHS_SEC,
-  VIDEO_MODELS,
 } from '../media/models';
 import { Icon } from './Icon';
 import { Skeleton } from './Loading';
@@ -120,7 +114,7 @@ const DESIGN_PLATFORMS: Array<{
 ];
 
 export type CreateTab = 'prototype' | 'live-artifact' | 'deck' | 'template' | 'media' | 'other';
-export type MediaSurface = 'image' | 'video' | 'audio';
+export type MediaSurface = 'image';
 
 export interface CreateInput {
   name: string;
@@ -167,8 +161,6 @@ const TAB_LABEL_KEYS: Record<CreateTab, keyof Dict> = {
 
 const MEDIA_SURFACE_LABEL_KEYS: Record<MediaSurface, keyof Dict> = {
   image: 'newproj.surfaceImage',
-  video: 'newproj.surfaceVideo',
-  audio: 'newproj.surfaceAudio',
 };
 
 export function defaultDesignSystemSelection(
@@ -191,6 +183,21 @@ export function buildDesignSystemCreateSelection(
         inspirations: selectedIds.slice(1),
       }
     : { primary: null, inspirations: [] };
+}
+
+function pickDefaultSkillId(
+  skills: SkillSummary[],
+  mode: SkillSummary['mode'],
+  defaultKey: string,
+): string | null {
+  const list = skills.filter((skill) => skill.mode === mode);
+  const explicitDefault = list.find((skill) => skill.defaultFor.includes(defaultKey));
+  if (explicitDefault) return explicitDefault.id;
+  if (defaultKey === 'prototype') {
+    const nonValidation = list.find((skill) => skill.scenario !== 'validation');
+    if (nonValidation) return nonValidation.id;
+  }
+  return list[0]?.id ?? null;
 }
 
 export function NewProjectPanel({
@@ -224,10 +231,6 @@ export function NewProjectPanel({
     { message: string; details?: string } | null
   >(null);
   const [tab, setTab] = useState<CreateTab>('prototype');
-  // Media tab consolidates image / video / audio. The active surface picks
-  // which set of options + skill resolution applies; submission still maps
-  // back to the existing image/video/audio ProjectKind branches so the
-  // backend contract is unchanged.
   const [mediaSurface, setMediaSurface] = useState<MediaSurface>('image');
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const [tabScroll, setTabScroll] = useState({ left: false, right: false });
@@ -258,28 +261,16 @@ export function NewProjectPanel({
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [imageModel, setImageModel] = useState(DEFAULT_IMAGE_MODEL);
   const [imageAspect, setImageAspect] = useState<MediaAspect>('1:1');
-  const [videoModel, setVideoModel] = useState(DEFAULT_VIDEO_MODEL);
-  const [videoModelTouched, setVideoModelTouched] = useState(false);
-  const [videoAspect, setVideoAspect] = useState<MediaAspect>('16:9');
-  const [videoLength, setVideoLength] = useState(5);
-  const [audioKind, setAudioKind] = useState<AudioKind>('speech');
-  const [audioModel, setAudioModel] = useState(DEFAULT_AUDIO_MODEL.speech);
-  const [audioDuration, setAudioDuration] = useState(10);
-  const [voice, setVoice] = useState('');
   // Per-surface curated prompt template the user picked. Tracked
-  // independently for image vs video so flipping tabs doesn't clobber the
-  // other one's pick. The body is editable in-line and the edited copy is
+  // independently for image so flipping tabs doesn't clobber the
   // what gets carried to the agent — that's the "optimize the template"
   // affordance the design brief asks for.
   const [imagePromptTemplate, setImagePromptTemplate] =
     useState<PromptTemplatePick | null>(null);
-  const [videoPromptTemplate, setVideoPromptTemplate] =
-    useState<PromptTemplatePick | null>(null);
-
   // Design system is meaningful only for the structured/visual surfaces
   // (prototype, deck, template, and the freeform "other" canvas). The
   // media surfaces use prompt templates instead — design tokens don't map
-  // onto image/video/audio generations, and the picker just adds noise
+  // onto image generations, and the picker just adds noise
   // there. Keep this list explicit so future tabs declare their intent.
   const tabSupportsDesignSystem =
     tab === 'prototype' ||
@@ -295,14 +286,10 @@ export function NewProjectPanel({
   const tabDefaultSkillForcesNoDs = useMemo(() => {
     const tabSkillId = ((): string | null => {
       if (tab === 'prototype' || tab === 'live-artifact') {
-        const list = skills.filter((s) => s.mode === 'prototype');
-        return list.find((s) => s.defaultFor.includes('prototype'))?.id
-          ?? list[0]?.id ?? null;
+        return pickDefaultSkillId(skills, 'prototype', 'prototype');
       }
       if (tab === 'deck') {
-        const list = skills.filter((s) => s.mode === 'deck');
-        return list.find((s) => s.defaultFor.includes('deck'))?.id
-          ?? list[0]?.id ?? null;
+        return pickDefaultSkillId(skills, 'deck', 'deck');
       }
       return null;
     })();
@@ -341,10 +328,7 @@ export function NewProjectPanel({
   const skillIdForTab = useMemo(() => {
     if (tab === 'other') return null;
     if (tab === 'prototype') {
-      const list = skills.filter((s) => s.mode === 'prototype');
-      return list.find((s) => s.defaultFor.includes('prototype'))?.id
-        ?? list[0]?.id
-        ?? null;
+      return pickDefaultSkillId(skills, 'prototype', 'prototype');
     }
     if (tab === 'live-artifact') {
       const exact = skills.find((s) => s.id === 'live-artifact' || s.name === 'live-artifact');
@@ -354,40 +338,23 @@ export function NewProjectPanel({
         return haystack.includes('live artifact') || haystack.includes('live-artifact');
       });
       if (hinted) return hinted.id;
-      const prototypes = skills.filter((s) => s.mode === 'prototype');
-      return prototypes.find((s) => s.defaultFor.includes('prototype'))?.id
-        ?? prototypes[0]?.id
-        ?? null;
+      return pickDefaultSkillId(skills, 'prototype', 'prototype');
     }
     if (tab === 'deck') {
-      const list = skills.filter((s) => s.mode === 'deck');
-      return list.find((s) => s.defaultFor.includes('deck'))?.id
-        ?? list[0]?.id
-        ?? null;
+      return pickDefaultSkillId(skills, 'deck', 'deck');
     }
     if (tab === 'media') {
       const list = skills.filter(
         (s) => s.mode === mediaSurface || s.surface === mediaSurface,
       );
-      // The HyperFrames-HTML render path lives in the `hyperframes` skill.
-      // When the user has chosen `hyperframes-html` (via dropdown or template),
-      // pin the project to that skill explicitly.
-      if (mediaSurface === 'video' && videoModel === 'hyperframes-html') {
-        const hyper = list.find((s) => s.id === 'hyperframes');
-        if (hyper) return hyper.id;
-      }
+
       return list.find((s) => s.defaultFor.includes(mediaSurface))?.id
         ?? list[0]?.id
         ?? null;
     }
     return null;
-  }, [tab, mediaSurface, skills, videoModel]);
+  }, [tab, mediaSurface, skills]);
 
-  // When the user picks a curated prompt template, propagate the template's
-  // declared `model` and `aspect` onto the actual project state. Without
-  // this the user picks (e.g.) a HyperFrames template but `videoModel`
-  // stays on the default seedance — the agent then dispatches the wrong
-  // model and the render path mismatches the prompt.
   function handleImagePromptTemplate(pick: PromptTemplatePick | null) {
     setImagePromptTemplate(pick);
     const m = pick?.summary.model;
@@ -397,45 +364,8 @@ export function NewProjectPanel({
       setImageAspect(a as MediaAspect);
     }
   }
-  function handleVideoPromptTemplate(pick: PromptTemplatePick | null) {
-    setVideoPromptTemplate(pick);
-    const m = pick?.summary.model;
-    if (m && VIDEO_MODELS.some((x) => x.id === m)) {
-      setVideoModel(m);
-      setVideoModelTouched(true);
-    }
-    const a = pick?.summary.aspect;
-    if (a && (MEDIA_ASPECTS as readonly string[]).includes(a)) {
-      setVideoAspect(a as MediaAspect);
-    }
-  }
-  function handleVideoModel(id: string) {
-    setVideoModel(id);
-    setVideoModelTouched(true);
-  }
 
-  // The HyperFrames skill renders HTML compositions through a local
-  // `npx hyperframes render` path, which dispatches under the
-  // `hyperframes-html` model — not seedance/veo/sora. When the resolved
-  // skill for the video tab is hyperframes, default `videoModel` so the
-  // model dropdown matches the actual render path. Once the user has
-  // explicitly chosen a model (via the dropdown or by picking a template
-  // that declares a model), `videoModelTouched` latches and this effect
-  // becomes a no-op for the rest of the panel session — re-entering the
-  // Media tab's Video surface no longer silently rewrites their override back to
-  // hyperframes-html.
-  useEffect(() => {
-    if (tab !== 'media' || mediaSurface !== 'video') return;
-    if (skillIdForTab !== 'hyperframes') return;
-    if (videoModelTouched) return;
-    if (videoPromptTemplate) return;
-    if (!VIDEO_MODELS.some((m) => m.id === 'hyperframes-html')) return;
-    setVideoModel('hyperframes-html');
-    // Intentionally leaving videoPromptTemplate / videoModel out of deps
-    // so this only fires when the user toggles the tab or the skill
-    // resolution shifts — not whenever the user changes the dropdown.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, mediaSurface, skillIdForTab, videoModelTouched]);
+
 
   const canCreate =
     !loading && (tab !== 'template' || templateId != null);
@@ -490,16 +420,12 @@ export function NewProjectPanel({
     // Media surfaces don't carry a design system pick. Force the primary
     // and inspiration ids to empty there so the New Project panel can't
     // accidentally bind a stale DS that the user can no longer see in the
-    // form (the picker is hidden for image/video/audio).
+    // form (the picker is hidden for image tabs).
     const { primary: primaryDs, inspirations } =
       buildDesignSystemCreateSelection(showDesignSystemPicker, selectedDsIds);
     const promptTemplatePick =
       tab === 'media'
-        ? mediaSurface === 'image'
-          ? imagePromptTemplate
-          : mediaSurface === 'video'
-            ? videoPromptTemplate
-            : null
+        ? imagePromptTemplate
         : null;
     const metadata = buildMetadata({
       tab,
@@ -514,13 +440,6 @@ export function NewProjectPanel({
       templates,
       imageModel,
       imageAspect,
-      videoModel,
-      videoAspect,
-      videoLength,
-      audioKind,
-      audioModel,
-      audioDuration,
-      voice,
       inspirationIds: inspirations,
       promptTemplate: promptTemplatePick,
     });
@@ -666,27 +585,6 @@ export function NewProjectPanel({
           />
         ) : null}
 
-        {tab === 'media' ? (
-          <div
-            className="newproj-media-segmented"
-            role="tablist"
-            aria-label={t('newproj.tabMedia')}
-          >
-            {(Object.keys(MEDIA_SURFACE_LABEL_KEYS) as MediaSurface[]).map((surface) => (
-              <button
-                key={surface}
-                type="button"
-                role="tab"
-                data-testid={`new-project-media-surface-${surface}`}
-                aria-selected={mediaSurface === surface}
-                className={`newproj-media-surface ${mediaSurface === surface ? 'active' : ''}`}
-                onClick={() => setMediaSurface(surface)}
-              >
-                {t(MEDIA_SURFACE_LABEL_KEYS[surface])}
-              </button>
-            ))}
-          </div>
-        ) : null}
 
         {tab === 'media' && mediaSurface === 'image' ? (
           <PromptTemplatePicker
@@ -697,14 +595,6 @@ export function NewProjectPanel({
           />
         ) : null}
 
-        {tab === 'media' && mediaSurface === 'video' ? (
-          <PromptTemplatePicker
-            surface="video"
-            templates={promptTemplates}
-            value={videoPromptTemplate}
-            onChange={handleVideoPromptTemplate}
-          />
-        ) : null}
 
         {tab === 'prototype' || tab === 'live-artifact' || tab === 'template' || tab === 'other' ? (
           <PlatformPicker value={platformTargets} onChange={setPlatformTargets} />
@@ -771,36 +661,6 @@ export function NewProjectPanel({
           />
         ) : null}
 
-        {tab === 'media' && mediaSurface === 'video' ? (
-          <MediaProjectOptions
-            surface="video"
-            videoModel={videoModel}
-            videoAspect={videoAspect}
-            videoLength={videoLength}
-            mediaProviders={mediaProviders}
-            onVideoModel={handleVideoModel}
-            onVideoAspect={setVideoAspect}
-            onVideoLength={setVideoLength}
-          />
-        ) : null}
-
-        {tab === 'media' && mediaSurface === 'audio' ? (
-          <MediaProjectOptions
-            surface="audio"
-            audioKind={audioKind}
-            audioModel={audioModel}
-            audioDuration={audioDuration}
-            voice={voice}
-            mediaProviders={mediaProviders}
-            onAudioKind={(kind) => {
-              setAudioKind(kind);
-              setAudioModel(DEFAULT_AUDIO_MODEL[kind]);
-            }}
-            onAudioModel={setAudioModel}
-            onAudioDuration={setAudioDuration}
-            onVoice={setVoice}
-          />
-        ) : null}
 
         <button
           className="primary newproj-create"
@@ -1239,7 +1099,7 @@ function TemplatePicker({
 }
 
 /* ============================================================
-   Prompt template picker — for the image/video tabs only.
+   Prompt template picker — for the image tab.
    - Trigger card (mirrors the design-system trigger) opens a popover
      with a search field and a thumbnail-card list filtered by surface.
    - When a template is picked we lazily fetch the full prompt body via
@@ -1255,7 +1115,7 @@ function PromptTemplatePicker({
   value,
   onChange,
 }: {
-  surface: 'image' | 'video';
+  surface: 'image';
   templates: PromptTemplateSummary[];
   value: PromptTemplatePick | null;
   onChange: (next: PromptTemplatePick | null) => void;
@@ -1529,7 +1389,7 @@ function PromptTemplateAvatar({
   }
   return (
     <span className="ds-avatar prompt-template-avatar fallback" aria-hidden>
-      <Icon name={summary.surface === 'video' ? 'play' : 'image'} size={14} />
+      <Icon name="image" size={14} />
     </span>
   );
 }
@@ -1942,131 +1802,37 @@ function fallbackSwatches(seed: string): string[] {
   ];
 }
 
-function MediaProjectOptions(props:
-  | {
-      surface: 'image';
-      imageModel: string;
-      imageAspect: MediaAspect;
-      mediaProviders?: Record<string, MediaProviderCredentials>;
-      onImageModel: (value: string) => void;
-      onImageAspect: (value: MediaAspect) => void;
-    }
-  | {
-      surface: 'video';
-      videoModel: string;
-      videoAspect: MediaAspect;
-      videoLength: number;
-      mediaProviders?: Record<string, MediaProviderCredentials>;
-      onVideoModel: (value: string) => void;
-      onVideoAspect: (value: MediaAspect) => void;
-      onVideoLength: (value: number) => void;
-    }
-  | {
-      surface: 'audio';
-      audioKind: AudioKind;
-      audioModel: string;
-      audioDuration: number;
-      voice: string;
-      mediaProviders?: Record<string, MediaProviderCredentials>;
-      onAudioKind: (value: AudioKind) => void;
-      onAudioModel: (value: string) => void;
-      onAudioDuration: (value: number) => void;
-      onVoice: (value: string) => void;
-    }
-) {
+function MediaProjectOptions(props: {
+  surface: 'image';
+  imageModel: string;
+  imageAspect: MediaAspect;
+  mediaProviders?: Record<string, MediaProviderCredentials>;
+  onImageModel: (value: string) => void;
+  onImageAspect: (value: MediaAspect) => void;
+}) {
   const t = useT();
 
-  if (props.surface === 'image') {
-    return (
-      <div className="newproj-media-options">
-        <MediaModelCards
-          label={t('newproj.modelLabel')}
-          models={supportedModels('image', IMAGE_MODELS)}
-          mediaProviders={props.mediaProviders}
-          value={props.imageModel}
-          onChange={props.onImageModel}
-        />
-        <AspectCards
-          label={t('newproj.aspectLabel')}
-          value={props.imageAspect}
-          onChange={props.onImageAspect}
-        />
-      </div>
-    );
-  }
-
-  if (props.surface === 'video') {
-    return (
-      <div className="newproj-media-options">
-        <MediaModelCards
-          label={t('newproj.modelLabel')}
-          models={supportedModels('video', VIDEO_MODELS)}
-          mediaProviders={props.mediaProviders}
-          value={props.videoModel}
-          onChange={props.onVideoModel}
-        />
-        <AspectCards
-          label={t('newproj.aspectLabel')}
-          value={props.videoAspect}
-          onChange={props.onVideoAspect}
-        />
-        <label className="newproj-label">
-          <span>{t('newproj.videoLengthLabel')}</span>
-          <select value={props.videoLength} onChange={(e) => props.onVideoLength(Number(e.target.value))}>
-            {VIDEO_LENGTHS_SEC.map((sec) => (
-              <option key={sec} value={sec}>{t('newproj.videoLengthSeconds', { n: sec })}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-    );
-  }
-
-  const models = supportedModels('audio', AUDIO_MODELS_BY_KIND[props.audioKind]);
   return (
     <div className="newproj-media-options">
-      <OptionCards
-        label={t('newproj.audioKindLabel')}
-        options={[
-          { value: 'speech' as const, title: t('newproj.audioKindSpeech') },
-        ]}
-        value={props.audioKind}
-        onChange={props.onAudioKind}
-      />
       <MediaModelCards
         label={t('newproj.modelLabel')}
-        models={models}
+        models={supportedModels('image', IMAGE_MODELS)}
         mediaProviders={props.mediaProviders}
-        value={props.audioModel}
-        onChange={props.onAudioModel}
+        value={props.imageModel}
+        onChange={props.onImageModel}
       />
-      <label className="newproj-label">
-        <span>{t('newproj.audioDurationLabel')}</span>
-        <select value={props.audioDuration} onChange={(e) => props.onAudioDuration(Number(e.target.value))}>
-          {AUDIO_DURATIONS_SEC.map((sec) => (
-            <option key={sec} value={sec}>{t('newproj.audioDurationSeconds', { n: sec })}</option>
-          ))}
-        </select>
-      </label>
-      {props.audioKind === 'speech' ? (
-        <label className="newproj-label">
-          <span>{t('newproj.voiceLabel')}</span>
-          <input
-            value={props.voice}
-            placeholder={t('newproj.voicePlaceholder')}
-            onChange={(e) => props.onVoice(e.target.value)}
-          />
-        </label>
-      ) : null}
+      <AspectCards
+        label={t('newproj.aspectLabel')}
+        value={props.imageAspect}
+        onChange={props.onImageAspect}
+      />
     </div>
   );
 }
 
-export function supportedModels(surface: 'image' | 'video' | 'audio', models: MediaModel[]): MediaModel[] {
-  const supportedProviders: Record<'image' | 'video' | 'audio', Set<string>> = {
+export function supportedModels(surface: 'image', models: MediaModel[]): MediaModel[] {
+  const supportedProviders: Record<'image', Set<string>> = {
     image: new Set(['openai', 'volcengine', 'grok', 'nanobanana']),
-    video: new Set(['volcengine', 'hyperframes', 'grok']),
-    audio: new Set(['minimax', 'fishaudio']),
   };
   return models.filter((model) => {
     const provider = findProvider(model.provider);
@@ -2376,13 +2142,6 @@ function buildMetadata(input: {
   templates: ProjectTemplate[];
   imageModel: string;
   imageAspect: MediaAspect;
-  videoModel: string;
-  videoAspect: MediaAspect;
-  videoLength: number;
-  audioKind: AudioKind;
-  audioModel: string;
-  audioDuration: number;
-  voice: string;
   inspirationIds: string[];
   promptTemplate: PromptTemplatePick | null;
 }): ProjectMetadata {
@@ -2438,31 +2197,11 @@ function buildMetadata(input: {
     };
   }
   if (input.tab === 'media') {
-    if (input.mediaSurface === 'image') {
-      return {
-        kind,
-        imageModel: input.imageModel,
-        imageAspect: input.imageAspect,
-        ...buildPromptTemplateMetadata(input.promptTemplate),
-        ...inspirations,
-      };
-    }
-    if (input.mediaSurface === 'video') {
-      return {
-        kind,
-        videoModel: input.videoModel,
-        videoAspect: input.videoAspect,
-        videoLength: input.videoLength,
-        ...buildPromptTemplateMetadata(input.promptTemplate),
-        ...inspirations,
-      };
-    }
     return {
       kind,
-      audioKind: input.audioKind,
-      audioModel: input.audioModel,
-      audioDuration: input.audioDuration,
-      voice: input.voice.trim() || undefined,
+      imageModel: input.imageModel,
+      imageAspect: input.imageAspect,
+      ...buildPromptTemplateMetadata(input.promptTemplate),
       ...inspirations,
     };
   }
@@ -2562,18 +2301,8 @@ function titleForTab(
       return t('newproj.titleDeck');
     case 'template':
       return t('newproj.titleTemplate');
-    case 'media': {
-      // Title tracks the active surface so the heading still reads "New
-      // image" / "New video" / "New audio" — the shared "Media" label only
-      // appears on the tab strip itself.
-      const key: keyof Dict =
-        mediaSurface === 'image'
-          ? 'newproj.titleImage'
-          : mediaSurface === 'video'
-            ? 'newproj.titleVideo'
-            : 'newproj.titleAudio';
-      return t(key);
-    }
+    case 'media':
+      return t('newproj.titleImage');
     case 'other':
       return t('newproj.titleOther');
   }
@@ -2585,8 +2314,7 @@ function autoName(
   t: TranslateFn,
 ): string {
   const stamp = new Date().toLocaleDateString();
-  // For the Media tab the auto name reads "Image · {date}" / "Video · …" /
-  // "Audio · …" so the project list still surfaces the actual surface.
+  // For the Media tab the auto name reads "Image · {date}".
   const labelKey: keyof Dict =
     tab === 'media' ? MEDIA_SURFACE_LABEL_KEYS[mediaSurface] : TAB_LABEL_KEYS[tab];
   return `${t(labelKey)} · ${stamp}`;

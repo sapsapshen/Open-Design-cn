@@ -82,51 +82,16 @@ export const IMAGE_MODELS: MediaModel[] = [
 ];
 
 export const VIDEO_MODELS: MediaModel[] = [
-  { id: 'doubao-seedance-2-0-260128', label: 'seedance-2.0', hint: 'ByteDance · t2v + i2v + audio', provider: 'volcengine', caps: ['t2v', 'i2v', 'audio'], default: true },
-  { id: 'doubao-seedance-2-0-fast-260128', label: 'seedance-2.0-fast', hint: 'ByteDance · faster, cheaper', provider: 'volcengine', caps: ['t2v', 'i2v', 'audio'] },
-  { id: 'doubao-seedance-1-0-pro-250528', label: 'seedance-1.0-pro', hint: 'ByteDance · 1.0', provider: 'volcengine', caps: ['t2v', 'i2v'] },
-  { id: 'doubao-seedance-1-0-lite-i2v-250428', label: 'seedance-1.0-lite-i2v', hint: 'ByteDance · image-to-video', provider: 'volcengine', caps: ['i2v'] },
-  { id: 'doubao-seedance-1-0-lite-t2v-250428', label: 'seedance-1.0-lite-t2v', hint: 'ByteDance · text-to-video', provider: 'volcengine', caps: ['t2v'] },
-
-  { id: 'grok-imagine-video', label: 'grok-imagine-video', hint: 'xAI · 720p t2v + i2v + native audio', provider: 'grok', caps: ['t2v', 'i2v', 'audio'] },
-
-  { id: 'kling-2.0', label: 'kling-2.0', hint: 'Kuaishou · latest', provider: 'kling', caps: ['t2v', 'i2v'] },
-  { id: 'kling-1.6', label: 'kling-1.6', hint: 'Kuaishou', provider: 'kling', caps: ['t2v', 'i2v'] },
-  { id: 'kling-1.5', label: 'kling-1.5', hint: 'Kuaishou', provider: 'kling', caps: ['t2v', 'i2v'] },
-
-  { id: 'veo-3', label: 'veo-3', hint: 'Google · sound-on', provider: 'google', caps: ['t2v', 'audio'] },
-  { id: 'veo-2', label: 'veo-2', hint: 'Google', provider: 'google', caps: ['t2v'] },
-
-  { id: 'sora-2', label: 'sora-2', hint: 'OpenAI · via Fal', provider: 'fal', caps: ['t2v'] },
-  { id: 'sora-2-pro', label: 'sora-2-pro', hint: 'OpenAI · via Fal', provider: 'fal', caps: ['t2v'] },
-
-  { id: 'minimax-video-01', label: 'video-01', hint: 'MiniMax · Hailuo', provider: 'minimax', caps: ['t2v', 'i2v'] },
-  { id: 'hyperframes-html', label: 'hyperframes-html', hint: 'HyperFrames · local HTML renderer', provider: 'hyperframes', caps: ['t2v'] },
 ];
-
 export const AUDIO_MODELS_BY_KIND: Record<AudioKind, MediaModel[]> = {
-  music: [
-    { id: 'suno-v5', label: 'suno-v5', hint: 'Suno · default', provider: 'suno', caps: ['music'], default: true },
-    { id: 'suno-v4-5', label: 'suno-v4.5', hint: 'Suno', provider: 'suno', caps: ['music'] },
-    { id: 'udio-v2', label: 'udio-v2', hint: 'Udio', provider: 'udio', caps: ['music'] },
-    { id: 'lyria-2', label: 'lyria-2', hint: 'Google', provider: 'google', caps: ['music'] },
-  ],
-  speech: [
-    { id: 'gpt-4o-mini-tts', label: 'gpt-4o-mini-tts', hint: 'OpenAI · expressive TTS', provider: 'openai', caps: ['tts'] },
-    { id: 'minimax-tts', label: 'minimax-tts', hint: 'MiniMax · default', provider: 'minimax', caps: ['tts'], default: true },
-    { id: 'fish-speech-2', label: 'fish-speech-2', hint: 'FishAudio', provider: 'fishaudio', caps: ['tts', 'voice-clone'] },
-    { id: 'elevenlabs-v3', label: 'elevenlabs-v3', hint: 'ElevenLabs', provider: 'elevenlabs', caps: ['tts', 'voice-clone'] },
-    { id: 'doubao-tts', label: 'doubao-tts', hint: 'Volcengine · TTS', provider: 'volcengine', caps: ['tts'] },
-  ],
-  sfx: [
-    { id: 'elevenlabs-sfx', label: 'elevenlabs-sfx', hint: 'ElevenLabs SFX', provider: 'elevenlabs', caps: ['sfx'], default: true },
-    { id: 'audiocraft', label: 'audiocraft', hint: 'Meta · open', provider: 'replicate', caps: ['sfx', 'music'] },
-  ],
+  music: [],
+  speech: [],
+  sfx: [],
 };
 
 export const MEDIA_ASPECTS = ['1:1', '16:9', '9:16', '4:3', '3:4'];
-export const VIDEO_LENGTHS_SEC = [3, 5, 8, 10, 15, 30];
-export const AUDIO_DURATIONS_SEC = [5, 10, 15, 30, 60, 120];
+export const VIDEO_LENGTHS_SEC: number[] = [3, 5, 8, 10, 15, 30];
+export const AUDIO_DURATIONS_SEC: number[] = [5, 10, 15, 30, 60, 120];
 
 export function findMediaModel(id: string): MediaModel | null {
   const all = [
@@ -143,12 +108,9 @@ export function findProvider(id: string): MediaProvider | null {
   return MEDIA_PROVIDERS.find((p) => p.id === id) || null;
 }
 
-export function modelsForSurface(surface: MediaSurface, audioKind?: AudioKind): MediaModel[] {
+export function modelsForSurface(surface: MediaSurface, _audioKind?: AudioKind): MediaModel[] {
   if (surface === 'image') return IMAGE_MODELS;
   if (surface === 'video') return VIDEO_MODELS;
-  if (surface === 'audio') {
-    const k = audioKind || 'music';
-    return AUDIO_MODELS_BY_KIND[k] || AUDIO_MODELS_BY_KIND.music;
-  }
+  if (surface === 'audio' && _audioKind) return AUDIO_MODELS_BY_KIND[_audioKind];
   return [];
 }

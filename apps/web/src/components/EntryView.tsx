@@ -694,7 +694,7 @@ function metadataForSkill(skill: SkillSummary): ProjectMetadata {
     return { kind, imageModel: DEFAULT_IMAGE_MODEL, imageAspect: '1:1' };
   }
   if (kind === 'video') {
-    return { kind, videoModel: DEFAULT_VIDEO_MODEL, videoAspect: '16:9', videoLength: 5 };
+    return { kind, videoModel: undefined, videoAspect: '16:9', videoLength: 5 };
   }
   if (kind === 'audio') {
     return {

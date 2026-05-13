@@ -373,7 +373,7 @@ export const MCP_TEMPLATES: McpTemplate[] = [
     id: 'higgsfield-openclaw',
     label: 'Higgsfield (OpenClaw)',
     description:
-      'Image and video generation MCP from higgsfield.ai. Exposes Soul, Nano Banana, Flux, Kling, Veo, Seedance, and 25+ other models. Endpoint is streamable HTTP at /mcp; click "Connect" after saving — Open Design completes OAuth and stores the token server-side, so no terminal step is needed and the connection survives across chat turns and cloud deployments.',
+      'Image and video generation MCP from higgsfield.ai. Exposes Soul, Nano Banana, Flux, Kling, Veo, Seedance, and 25+ other models. Endpoint is streamable HTTP at /mcp; click "Connect" after saving — Open Design - Chinese Optimized Version completes OAuth and stores the token server-side, so no terminal step is needed and the connection survives across chat turns and cloud deployments.',
     transport: 'http',
     category: 'image-generation',
     homepage: 'https://higgsfield.ai/mcp?tab=openclaw',
@@ -926,7 +926,7 @@ export const MCP_TEMPLATES: McpTemplate[] = [
     category: 'publishing',
     homepage: 'https://ogforge.dev/',
     example:
-      'Generate a 1200×630 dark-theme OG image titled "Open Design 1.0" with a subtitle "Design with agents", with a Lucide "sparkles" icon.',
+      'Generate a 1200×630 dark-theme OG image titled "Open Design - Chinese Optimized Version 1.0" with a subtitle "Design with agents", with a Lucide "sparkles" icon.',
     command: 'npx',
     args: ['-y', 'ogforge-api'],
   },
@@ -982,7 +982,7 @@ export const MCP_TEMPLATES: McpTemplate[] = [
     id: 'filesystem',
     label: 'Filesystem',
     description:
-      'Read, write and list files in a sandboxed directory. Useful for letting the agent operate on a folder outside your Open Design project.',
+      'Read, write and list files in a sandboxed directory. Useful for letting the agent operate on a folder outside your Open Design - Chinese Optimized Version project.',
     transport: 'stdio',
     category: 'utilities',
     homepage: 'https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem',

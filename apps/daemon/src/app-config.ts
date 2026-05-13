@@ -49,6 +49,8 @@ export interface AppConfigPrefs {
   privacyDecisionAt?: number | null;
   orbit?: OrbitConfigPrefs;
   customInstructions?: string | null;
+  wizardDeepseekKey?: string;
+  wizardSiliconflowKey?: string;
 }
 
 const ALLOWED_KEYS: ReadonlySet<keyof AppConfigPrefs> = new Set([
@@ -65,6 +67,8 @@ const ALLOWED_KEYS: ReadonlySet<keyof AppConfigPrefs> = new Set([
   'privacyDecisionAt',
   'orbit',
   'customInstructions',
+  'wizardDeepseekKey',
+  'wizardSiliconflowKey',
 ] as const);
 
 function configFile(dataDir: string): string {
@@ -267,6 +271,14 @@ function applyConfigValue(
       target[key] = value.slice(0, 5000);
     } else if (value === null) {
       target[key] = value;
+    }
+    return;
+  }
+  if (key === 'wizardDeepseekKey' || key === 'wizardSiliconflowKey') {
+    if (typeof value === 'string' && value.trim()) {
+      target[key] = value.trim();
+    } else {
+      delete target[key];
     }
     return;
   }

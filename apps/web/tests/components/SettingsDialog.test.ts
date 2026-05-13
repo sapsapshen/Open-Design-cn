@@ -1,17 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import {
   agentRefreshOptionsForConfig,
   canFetchProviderModels,
   canRunProviderConnectionTest,
-  deriveComposioCredentialState,
   configForManualOrbitRun,
-  isOrbitRunDisabled,
+  deriveComposioCredentialState,
   isValidApiBaseUrl,
+  isOrbitRunDisabled,
   mergeProviderModelOptions,
+  persistConfigAndRunOrbit,
   sanitizeSettingsSavePayload,
   shouldEnableSettingsSave,
   shouldShowCustomModelInput,
-  persistConfigAndRunOrbit,
   switchApiProtocolConfig,
   testStatusVariant,
   updateAgentCliEnvValue,
@@ -106,9 +107,9 @@ describe('SettingsDialog API protocol switching', () => {
       mode: 'api',
       apiProtocol: 'openai',
       apiKey: '',
-      baseUrl: 'https://api.openai.com/v1',
-      model: 'gpt-4o',
-      apiProviderBaseUrl: 'https://api.openai.com/v1',
+      baseUrl: 'https://api.siliconflow.cn/v1',
+      model: 'Qwen/Qwen2.5-7B-Instruct',
+      apiProviderBaseUrl: 'https://api.siliconflow.cn/v1',
     });
   });
 

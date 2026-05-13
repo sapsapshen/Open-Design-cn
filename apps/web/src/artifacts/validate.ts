@@ -36,12 +36,27 @@
 
 const MIN_HTML_LENGTH = 64;
 const STARTS_WITH_DOCUMENT_RE = /^(?:<!doctype\s+html\b|<html\b)/i;
+const VISUAL_PLACEHOLDER_RE = new RegExp(
+  [
+    '\\bplaceholder-img\\b',
+    '\\b(?:image|avatar|chart|screenshot)-placeholder\\b',
+    '(?:灰色占位块|截图占位|图像占位|图片占位|无头像占位|chart placeholder|image placeholder|avatar placeholder|screenshot placeholder)',
+  ].join('|'),
+  'i',
+);
+
+export interface HtmlArtifactValidationOptions {
+  allowVisualPlaceholders?: boolean;
+}
 
 export type HtmlArtifactValidationResult =
   | { ok: true }
   | { ok: false; reason: string };
 
-export function validateHtmlArtifact(content: string): HtmlArtifactValidationResult {
+export function validateHtmlArtifact(
+  content: string,
+  options: HtmlArtifactValidationOptions = {},
+): HtmlArtifactValidationResult {
   const trimmed = content.replace(/^﻿/, '').trim();
   if (trimmed.length === 0) {
     return { ok: false, reason: 'empty content' };
@@ -51,6 +66,12 @@ export function validateHtmlArtifact(content: string): HtmlArtifactValidationRes
   }
   if (!STARTS_WITH_DOCUMENT_RE.test(trimmed)) {
     return { ok: false, reason: 'content does not start with <!doctype html> or <html — looks like prose, not a complete HTML document' };
+  }
+  if (!options.allowVisualPlaceholders && VISUAL_PLACEHOLDER_RE.test(trimmed)) {
+    return {
+      ok: false,
+      reason: 'content still contains visual placeholder blocks or labelled stubs; final high-fidelity artifacts must replace them with real layout content',
+    };
   }
   return { ok: true };
 }

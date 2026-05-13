@@ -177,7 +177,7 @@ describe('mergeDaemonConfig', () => {
       },
     );
 
-    expect(merged.agentId).toBe('codex');
+    expect(merged.agentId).toBeNull();
     expect(merged.agentCliEnv).toEqual({});
   });
 
@@ -625,7 +625,7 @@ describe('loadConfig', () => {
     expect(config.apiProtocol).toBe('anthropic');
   });
 
-  it('infers protocol for legacy daemon-mode API fields without changing mode', () => {
+  it('forces legacy daemon-mode API fields onto the API-only runtime', () => {
     const daemonConfig: Partial<AppConfig> = {
       mode: 'daemon',
       apiKey: 'sk-test',
@@ -639,12 +639,12 @@ describe('loadConfig', () => {
 
     const config = loadConfig();
 
-    expect(config.mode).toBe('daemon');
+    expect(config.mode).toBe('api');
     expect(config.apiProtocol).toBe('openai');
     expect(config.configMigrationVersion).toBe(1);
   });
 
-  it('migrates legacy Ollama Cloud configs to an explicit ollama apiProtocol', () => {
+  it('resets legacy Ollama Cloud configs to the DeepSeek runtime defaults', () => {
     const legacyConfig: Partial<AppConfig> = {
       mode: 'api',
       apiKey: 'ollama-key',
@@ -659,14 +659,14 @@ describe('loadConfig', () => {
     const config = loadConfig();
 
     expect(config.mode).toBe('api');
-    expect(config.baseUrl).toBe('https://ollama.com');
-    expect(config.model).toBe('gpt-oss:120b');
-    expect(config.apiProtocol).toBe('ollama');
-    expect(config.apiProviderBaseUrl).toBe('https://ollama.com');
+    expect(config.baseUrl).toBe(DEFAULT_CONFIG.baseUrl);
+    expect(config.model).toBe(DEFAULT_CONFIG.model);
+    expect(config.apiProtocol).toBe(DEFAULT_CONFIG.apiProtocol);
+    expect(config.apiProviderBaseUrl).toBe(DEFAULT_CONFIG.apiProviderBaseUrl);
     expect(config.configMigrationVersion).toBe(1);
   });
 
-  it('migrates legacy ollama.com configs with a custom base URL path', () => {
+  it('resets legacy ollama.com configs with a custom base URL path to the DeepSeek runtime defaults', () => {
     const legacyConfig: Partial<AppConfig> = {
       mode: 'api',
       apiKey: 'ollama-key',
@@ -680,12 +680,11 @@ describe('loadConfig', () => {
 
     const config = loadConfig();
 
-    expect(config.apiProtocol).toBe('ollama');
-    // /api suffix must be stripped so the daemon doesn't build /api/api/chat.
-    expect(config.baseUrl).toBe('https://ollama.com');
+    expect(config.apiProtocol).toBe(DEFAULT_CONFIG.apiProtocol);
+    expect(config.baseUrl).toBe(DEFAULT_CONFIG.baseUrl);
   });
 
-  it('migrates legacy ollama.com configs with a trailing /api/ suffix', () => {
+  it('resets legacy ollama.com configs with a trailing /api/ suffix to the DeepSeek runtime defaults', () => {
     const legacyConfig: Partial<AppConfig> = {
       mode: 'api',
       apiKey: 'ollama-key',
@@ -699,8 +698,8 @@ describe('loadConfig', () => {
 
     const config = loadConfig();
 
-    expect(config.apiProtocol).toBe('ollama');
-    expect(config.baseUrl).toBe('https://ollama.com');
+    expect(config.apiProtocol).toBe(DEFAULT_CONFIG.apiProtocol);
+    expect(config.baseUrl).toBe(DEFAULT_CONFIG.baseUrl);
   });
 
   it('does not overwrite an already explicit apiProtocol', () => {

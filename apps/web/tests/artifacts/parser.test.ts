@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { type ArtifactEvent, createArtifactParser } from '../../src/artifacts/parser';
+import {
+  type ArtifactEvent,
+  createArtifactParser,
+  inferHtmlArtifactFromText,
+} from '../../src/artifacts/parser';
 
 function collect(input: string): ArtifactEvent[] {
   const parser = createArtifactParser();
@@ -190,5 +194,26 @@ describe('createArtifactParser', () => {
       .map((e) => e.delta)
       .join('');
     expect(text).toContain('After the fence, more prose.');
+  });
+
+  it('can infer a complete HTML artifact from a fenced html code block', () => {
+    const inferred = inferHtmlArtifactFromText([
+      'Here is the generated deck:',
+      '```html',
+      '<!doctype html>',
+      '<html lang="en">',
+      '<head><title>Deck</title></head>',
+      '<body><main>Deck</main></body>',
+      '</html>',
+      '```',
+    ].join('\n'));
+
+    expect(inferred).toMatchObject({
+      identifier: 'artifact',
+      artifactType: 'text/html',
+      title: 'Generated artifact',
+    });
+    expect(inferred?.html).toContain('<!doctype html>');
+    expect(inferred?.html).toContain('<body><main>Deck</main></body>');
   });
 });

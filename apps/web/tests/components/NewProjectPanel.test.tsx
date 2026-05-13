@@ -220,6 +220,68 @@ describe('NewProjectPanel design system defaults', () => {
     );
   });
 
+  it('skips validation-only prototype skills when inferring the default create skill', () => {
+    const onCreate = vi.fn();
+    const prototypeSkills: SkillSummary[] = [
+      {
+        id: 'agent-browser',
+        name: 'Agent Browser',
+        description: 'Browser QA skill',
+        mode: 'prototype',
+        surface: 'web',
+        previewType: 'markdown',
+        designSystemRequired: false,
+        defaultFor: [],
+        triggers: [],
+        upstream: null,
+        hasBody: true,
+        examplePrompt: '',
+        aggregatesExamples: false,
+        scenario: 'validation',
+      },
+      {
+        id: 'artifacts-builder',
+        name: 'Artifacts Builder',
+        description: 'Prototype builder',
+        mode: 'prototype',
+        surface: 'web',
+        previewType: 'html',
+        designSystemRequired: true,
+        defaultFor: [],
+        triggers: [],
+        upstream: null,
+        hasBody: true,
+        examplePrompt: '',
+        aggregatesExamples: false,
+        scenario: 'general',
+      },
+    ];
+
+    render(
+      <NewProjectPanel
+        skills={prototypeSkills}
+        designSystems={designSystems}
+        defaultDesignSystemId="clay"
+        templates={[]}
+        onDeleteTemplate={vi.fn()}
+        promptTemplates={[]}
+        onCreate={onCreate}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId('new-project-name'), {
+      target: { value: 'Prototype default skill routing' },
+    });
+    fireEvent.click(screen.getByTestId('create-project'));
+
+    expect(onCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Prototype default skill routing',
+        skillId: 'artifacts-builder',
+      }),
+    );
+  });
+
   it('saves live artifact creation with prototype kind, live-artifact intent, and locked high fidelity', () => {
     const onCreate = vi.fn();
     render(

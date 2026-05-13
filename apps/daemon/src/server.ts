@@ -1202,7 +1202,7 @@ export function createAgentRuntimeToolPrompt(
     '',
     `- Daemon URL: \`${daemonUrl}\` (also available as \`OD_DAEMON_URL\`).`,
     '- `OD_NODE_BIN` is the absolute path to the Node-compatible runtime that started the daemon; packaged desktop installs provide this even when the user has no system `node` on PATH.',
-    '- `OD_BIN` is the absolute path to the Open Design CLI script. On POSIX shells run wrappers with `"$OD_NODE_BIN" "$OD_BIN" tools ...`; do not call bare `od`, which may resolve to the system octal-dump command on Unix-like systems.',
+    '- `OD_BIN` is the absolute path to the Open Design - Chinese Optimized Version CLI script. On POSIX shells run wrappers with `"$OD_NODE_BIN" "$OD_BIN" tools ...`; do not call bare `od`, which may resolve to the system octal-dump command on Unix-like systems.',
     '- On PowerShell use `& $env:OD_NODE_BIN $env:OD_BIN tools ...`; on cmd.exe use `"%OD_NODE_BIN%" "%OD_BIN%" tools ...`.',
     tokenLine,
     '- Prefer project wrapper commands through `OD_NODE_BIN` + `OD_BIN` over raw HTTP. The wrappers read these environment values automatically.',
@@ -1552,7 +1552,7 @@ function renderOAuthResultPage(opts) {
   const title = ok ? 'Connected' : 'Authorization failed';
   const heading = ok ? '✅ Connected' : '⚠️ Authorization failed';
   const body = ok
-    ? `Your MCP server <code>${escapeHtml(opts.serverId ?? '')}</code> is now connected. You can close this tab and return to Open Design.`
+    ? `Your MCP server <code>${escapeHtml(opts.serverId ?? '')}</code> is now connected. You can close this tab and return to Open Design - Chinese Optimized Version.`
     : escapeHtml(opts.message ?? 'Authorization could not be completed.');
   const accent = ok ? '#1a7f37' : '#cf222e';
   const payload = ok
@@ -1562,7 +1562,7 @@ function renderOAuthResultPage(opts) {
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>${escapeHtml(title)} — Open Design</title>
+<title>${escapeHtml(title)} — Open Design - Chinese Optimized Version</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root { color-scheme: light dark; }
@@ -3114,6 +3114,160 @@ export async function startServer({
     return { prompt, activeSkillDir, critiqueShouldRun };
   };
 
+  async function runDeepseekChat(chatBody, run, composeDaemonSystemPrompt) {
+    const {
+      agentId: _agentId,
+      message, currentPrompt, systemPrompt,
+      projectId, skillId, designSystemId,
+      model: clientModel, reasoning: clientReasoning,
+    } = chatBody;
+
+    try {
+      const appCfg = await readAppConfig(RUNTIME_DATA_DIR);
+      const apiKey = appCfg.wizardDeepseekKey;
+      if (!apiKey) {
+        return design.runs.fail(run, 'CONFIG_ERROR', 'DeepSeek API key not configured');
+      }
+
+      const { prompt: daemonSystemPrompt } = await composeDaemonSystemPrompt({
+        agentId: 'deepseek',
+        projectId,
+        skillId,
+        designSystemId,
+        streamFormat: 'plain',
+        connectedExternalMcp: [],
+      });
+
+      const instructionPrompt = composeLiveInstructionPrompt({
+        daemonSystemPrompt,
+        clientSystemPrompt: typeof systemPrompt === 'string' ? systemPrompt.trim() : '',
+      });
+
+      const userMessage = message || '(No extra typed instruction.)';
+      const composedMessage = instructionPrompt
+        ? `# Instructions (read first)\n\n${instructionPrompt}\n\n---\n\n# User request\n\n${userMessage}`
+        : `# User request\n\n${userMessage}`;
+
+      const model = typeof clientModel === 'string' && clientModel ? clientModel : 'deepseek-chat';
+
+      const send = (event, data) => design.runs.emit(run, event, data);
+
+      send('start', { bin: `deepseek/${model}` });
+
+      const controller = new AbortController();
+      run._abort = () => controller.abort();
+
+      const payload = {
+        model,
+        messages: [
+          { role: 'system', content: daemonSystemPrompt || 'You are a helpful assistant.' },
+          { role: 'user', content: composedMessage },
+        ],
+        stream: true,
+        max_tokens: 8192,
+      };
+
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        let errText = '';
+        try { errText = await response.text(); } catch (_) {}
+        if (response.status === 401 || response.status === 403) {
+          send('error', createSseErrorPayload('AUTH_ERROR',
+            `DeepSeek API authentication failed (HTTP ${response.status}). Check your API key.`));
+        } else {
+          send('error', createSseErrorPayload('UPSTREAM_ERROR',
+            `DeepSeek API error HTTP ${response.status}: ${errText.slice(0, 200)}`));
+        }
+        return design.runs.finish(run, 'failed', 1, null);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullOutput = '';
+
+      for (;;) {
+        let done, value;
+        try {
+          ({ done, value } = await reader.read());
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (msg.includes('abort') || msg.includes('AbortError') || msg.includes('cancel')) {
+            send('end', { code: 0, status: 'canceled', signal: null });
+            return design.runs.finish(run, 'canceled', 0, null);
+          }
+          throw err;
+        }
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith('data: ')) continue;
+          const data = trimmed.slice(6);
+          if (data === '[DONE]') continue;
+
+          let parsed;
+          try { parsed = JSON.parse(data); } catch (_) { continue; }
+          const delta = parsed.choices?.[0]?.delta;
+          if (!delta) continue;
+          const text = delta.content || delta.reasoning_content || '';
+          if (text) {
+            fullOutput += text;
+            send('stdout', { chunk: text });
+          }
+        }
+      }
+
+      // flush remaining buffer
+      const tail = buffer.trim();
+      if (tail && tail.startsWith('data: ') && tail.slice(6) !== '[DONE]') {
+        try {
+          const parsed = JSON.parse(tail.slice(6));
+          const delta = parsed.choices?.[0]?.delta;
+          if (delta) {
+            const text = delta.content || delta.reasoning_content || '';
+            if (text) {
+              fullOutput += text;
+              send('stdout', { chunk: text });
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (fullOutput.trim().length === 0) {
+        send('error', createSseErrorPayload('EMPTY_OUTPUT', 'DeepSeek returned no content'));
+        return design.runs.finish(run, 'failed', 0, null);
+      }
+
+      send('end', { code: 0, status: 'succeeded', signal: null });
+      return design.runs.finish(run, 'succeeded', 0, null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('abort') || msg.includes('AbortError') || msg.includes('cancel')) {
+        try { design.runs.emit(run, 'end', { code: 0, status: 'canceled', signal: null }); } catch (_) {}
+        return design.runs.finish(run, 'canceled', 0, null);
+      }
+      try {
+        design.runs.emit(run, 'error', createSseErrorPayload('UPSTREAM_ERROR',
+          `DeepSeek API request failed: ${msg.slice(0, 200)}`));
+      } catch (_) {}
+      return design.runs.finish(run, 'failed', 1, null);
+    }
+  }
+
   const startChatRun = async (chatBody, run) => {
     /** @type {Partial<ChatRequest> & { imagePaths?: string[] }} */
     chatBody = chatBody || {};
@@ -3154,6 +3308,16 @@ export async function startServer({
     if (typeof skillId === 'string' && skillId) run.skillId = skillId;
     if (typeof designSystemId === 'string' && designSystemId)
       run.designSystemId = designSystemId;
+    // DeepSeek HTTP mode: if wizardDeepseekKey is configured, use direct
+    // HTTP API instead of spawning an agent CLI.
+    try {
+      const appCfg = await readAppConfig(RUNTIME_DATA_DIR);
+      if (appCfg.wizardDeepseekKey) {
+        return await runDeepseekChat(chatBody, run, composeDaemonSystemPrompt);
+      }
+    } catch (_) {
+      // safe to ignore — config read may fail, fall through to agent spawn
+    }
     const def = getAgentDef(agentId);
     if (!def)
       return design.runs.fail(
@@ -4651,7 +4815,7 @@ function assembleExample(templateHtml, slidesHtml, title) {
     .replace('<!-- SLIDES_HERE -->', slidesHtml)
     .replace(
       /<title>.*?<\/title>/,
-      `<title>${title} | Open Design Example</title>`,
+      `<title>${title} | Open Design - Chinese Optimized Version Example</title>`,
     );
 }
 

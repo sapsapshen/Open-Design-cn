@@ -307,7 +307,7 @@ function renderOAuthResultPage(opts: any) {
   const title = ok ? 'Connected' : 'Authorization failed';
   const heading = ok ? '✅ Connected' : '⚠️ Authorization failed';
   const body = ok
-    ? `Your MCP server <code>${escapeHtml(opts.serverId ?? '')}</code> is now connected. You can close this tab and return to Open Design.`
+    ? `Your MCP server <code>${escapeHtml(opts.serverId ?? '')}</code> is now connected. You can close this tab and return to Open Design - Chinese Optimized Version.`
     : escapeHtml(opts.message ?? 'Authorization could not be completed.');
   const accent = ok ? '#1a7f37' : '#cf222e';
   const payload = ok
@@ -317,7 +317,7 @@ function renderOAuthResultPage(opts: any) {
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>${escapeHtml(title)} — Open Design</title>
+<title>${escapeHtml(title)} — Open Design - Chinese Optimized Version</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root { color-scheme: light dark; }

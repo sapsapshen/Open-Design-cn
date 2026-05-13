@@ -3,6 +3,7 @@ import { MEDIA_PROVIDERS } from '../media/models';
 import { isOpenAICompatible } from '../providers/openai-compatible';
 import type {
   ApiProtocol,
+  ApiProtocolConfig,
   AppConfig,
   MediaProviderCredentials,
   NotificationsConfig,
@@ -53,19 +54,63 @@ export const DEFAULT_ORBIT: OrbitConfig = {
   templateSkillId: 'orbit-general',
 };
 
+export const DEEPSEEK_RUNTIME_PROVIDER: KnownProvider = {
+  label: 'DeepSeek',
+  protocol: 'anthropic',
+  baseUrl: 'https://api.deepseek.com/anthropic',
+  model: 'deepseek-chat',
+  models: [
+    'deepseek-chat',
+    'deepseek-reasoner',
+    'deepseek-v4-flash',
+    'deepseek-v4-pro',
+  ],
+};
+
+export const SILICONFLOW_RUNTIME_PROVIDER: KnownProvider = {
+  label: 'SiliconFlow',
+  protocol: 'openai',
+  baseUrl: 'https://api.siliconflow.cn/v1',
+  model: 'Qwen/Qwen2.5-7B-Instruct',
+  models: [
+    'Qwen/Qwen2.5-7B-Instruct',
+    'Qwen/Qwen2.5-14B-Instruct',
+    'Qwen/Qwen2.5-32B-Instruct',
+    'deepseek-ai/DeepSeek-V3',
+    'deepseek-ai/DeepSeek-R1',
+  ],
+};
+
+export const API_ONLY_RUNTIME_PROTOCOLS: ApiProtocol[] = ['anthropic', 'openai'];
+
 export const DEFAULT_CONFIG: AppConfig = {
-  mode: 'daemon',
+  mode: 'api',
   apiKey: '',
-  baseUrl: 'https://api.anthropic.com',
-  model: 'claude-sonnet-4-5',
+  baseUrl: DEEPSEEK_RUNTIME_PROVIDER.baseUrl,
+  model: DEEPSEEK_RUNTIME_PROVIDER.model,
   // New configs should be explicit. loadConfig() still detects parsed legacy
   // saved configs that did not have this field and migrates those from their
   // saved baseUrl/model before applying the current migration version.
   apiProtocol: 'anthropic',
   apiVersion: '',
-  apiProtocolConfigs: {},
+  apiProtocolConfigs: {
+    anthropic: {
+      apiKey: '',
+      baseUrl: DEEPSEEK_RUNTIME_PROVIDER.baseUrl,
+      model: DEEPSEEK_RUNTIME_PROVIDER.model,
+      apiVersion: '',
+      apiProviderBaseUrl: DEEPSEEK_RUNTIME_PROVIDER.baseUrl,
+    },
+    openai: {
+      apiKey: '',
+      baseUrl: SILICONFLOW_RUNTIME_PROVIDER.baseUrl,
+      model: SILICONFLOW_RUNTIME_PROVIDER.model,
+      apiVersion: '',
+      apiProviderBaseUrl: SILICONFLOW_RUNTIME_PROVIDER.baseUrl,
+    },
+  },
   configMigrationVersion: CONFIG_MIGRATION_VERSION,
-  apiProviderBaseUrl: 'https://api.anthropic.com',
+  apiProviderBaseUrl: DEEPSEEK_RUNTIME_PROVIDER.baseUrl,
   agentId: null,
   skillId: null,
   designSystemId: null,
@@ -102,25 +147,7 @@ export interface KnownProvider {
 // protocol that determines request routing, the base URL, a default model, and
 // optional provider-specific model choices.
 export const KNOWN_PROVIDERS: KnownProvider[] = [
-  {
-    label: 'Anthropic (Claude)',
-    protocol: 'anthropic',
-    baseUrl: 'https://api.anthropic.com',
-    model: 'claude-sonnet-4-5',
-    models: ['claude-sonnet-4-5', 'claude-opus-4-5', 'claude-haiku-4-5'],
-  },
-  {
-    label: 'DeepSeek — Anthropic',
-    protocol: 'anthropic',
-    baseUrl: 'https://api.deepseek.com/anthropic',
-    model: 'deepseek-chat',
-    models: [
-      'deepseek-chat',
-      'deepseek-reasoner',
-      'deepseek-v4-flash',
-      'deepseek-v4-pro',
-    ],
-  },
+  DEEPSEEK_RUNTIME_PROVIDER,
   {
     label: 'MiniMax — Anthropic',
     protocol: 'anthropic',
@@ -136,6 +163,14 @@ export const KNOWN_PROVIDERS: KnownProvider[] = [
       'MiniMax-M2',
     ],
   },
+  {
+    label: 'Anthropic (Claude)',
+    protocol: 'anthropic',
+    baseUrl: 'https://api.anthropic.com',
+    model: 'claude-sonnet-4-5',
+    models: ['claude-sonnet-4-5', 'claude-opus-4-5', 'claude-haiku-4-5'],
+  },
+  SILICONFLOW_RUNTIME_PROVIDER,
   {
     label: 'OpenAI',
     protocol: 'openai',
@@ -295,16 +330,127 @@ function inferApiProtocol(model: string, baseUrl: string): ApiProtocol {
   }
 }
 
+function preferredKnownProvider(protocol: ApiProtocol): KnownProvider | null {
+  switch (protocol) {
+    case 'anthropic':
+      return DEEPSEEK_RUNTIME_PROVIDER;
+    case 'openai':
+      return SILICONFLOW_RUNTIME_PROVIDER;
+    default:
+      return KNOWN_PROVIDERS.find((provider) => provider.protocol === protocol) ?? null;
+  }
+}
+
+function normalizeApiOnlyProtocol(protocol: ApiProtocol | undefined): ApiProtocol {
+  return protocol === 'openai' ? 'openai' : 'anthropic';
+}
+
+function normalizeApiProtocolConfig(
+  protocol: ApiProtocol,
+  current: Partial<ApiProtocolConfig> | undefined,
+): ApiProtocolConfig {
+  const preferredProvider = preferredKnownProvider(protocol);
+  const defaultBaseUrl = preferredProvider?.baseUrl ?? '';
+  const defaultModel = preferredProvider?.model ?? '';
+  return {
+    apiKey: current?.apiKey ?? '',
+    baseUrl: current?.baseUrl?.trim() || defaultBaseUrl,
+    model: current?.model?.trim() || defaultModel,
+    apiVersion: protocol === 'azure' ? current?.apiVersion?.trim() ?? '' : '',
+    apiProviderBaseUrl: current?.apiProviderBaseUrl ?? defaultBaseUrl ?? null,
+  };
+}
+
+export function normalizeExecutionConfig(config: AppConfig): AppConfig {
+  const inferredProtocol = config.apiProtocol ?? inferApiProtocol(config.model, config.baseUrl);
+  const currentProtocolIsSupported = inferredProtocol === 'anthropic' || inferredProtocol === 'openai';
+  const normalizedProtocol = normalizeApiOnlyProtocol(inferredProtocol);
+  const currentProtocolConfig: Partial<ApiProtocolConfig> | undefined = currentProtocolIsSupported
+    ? {
+        apiKey: config.apiKey,
+        baseUrl: config.baseUrl,
+        model: config.model,
+        apiVersion: config.apiVersion,
+        apiProviderBaseUrl: config.apiProviderBaseUrl,
+      }
+    : undefined;
+  const anthropicConfig = normalizeApiProtocolConfig(
+    'anthropic',
+    normalizedProtocol === 'anthropic'
+      ? { ...(config.apiProtocolConfigs?.anthropic ?? {}), ...(currentProtocolConfig ?? {}) }
+      : config.apiProtocolConfigs?.anthropic,
+  );
+  const openaiConfig = normalizeApiProtocolConfig(
+    'openai',
+    normalizedProtocol === 'openai'
+      ? { ...(config.apiProtocolConfigs?.openai ?? {}), ...(currentProtocolConfig ?? {}) }
+      : config.apiProtocolConfigs?.openai,
+  );
+  const activeConfig = normalizedProtocol === 'openai' ? openaiConfig : anthropicConfig;
+  return {
+    ...config,
+    mode: 'api',
+    apiProtocol: normalizedProtocol,
+    apiKey: activeConfig.apiKey,
+    baseUrl: activeConfig.baseUrl,
+    model: activeConfig.model,
+    apiVersion: '',
+    apiProviderBaseUrl: activeConfig.apiProviderBaseUrl ?? null,
+    apiProtocolConfigs: {
+      ...(config.apiProtocolConfigs ?? {}),
+      anthropic: anthropicConfig,
+      openai: openaiConfig,
+    },
+    agentId: null,
+  };
+}
+
+export function applyLaunchWizardKeys(
+  config: AppConfig,
+  keys: { deepseekKey: string; siliconflowKey: string },
+): AppConfig {
+  const normalized = normalizeExecutionConfig(config);
+  return normalizeExecutionConfig({
+    ...normalized,
+    apiProtocol: 'anthropic',
+    apiKey: keys.deepseekKey.trim(),
+    baseUrl: DEEPSEEK_RUNTIME_PROVIDER.baseUrl,
+    model: DEEPSEEK_RUNTIME_PROVIDER.model,
+    apiProviderBaseUrl: DEEPSEEK_RUNTIME_PROVIDER.baseUrl,
+    onboardingCompleted: true,
+    wizardCompleted: true,
+    wizardDeepseekKey: keys.deepseekKey.trim(),
+    wizardSiliconflowKey: keys.siliconflowKey.trim(),
+    apiProtocolConfigs: {
+      ...(normalized.apiProtocolConfigs ?? {}),
+      anthropic: {
+        apiKey: keys.deepseekKey.trim(),
+        baseUrl: DEEPSEEK_RUNTIME_PROVIDER.baseUrl,
+        model: DEEPSEEK_RUNTIME_PROVIDER.model,
+        apiVersion: '',
+        apiProviderBaseUrl: DEEPSEEK_RUNTIME_PROVIDER.baseUrl,
+      },
+      openai: {
+        apiKey: keys.siliconflowKey.trim(),
+        baseUrl: SILICONFLOW_RUNTIME_PROVIDER.baseUrl,
+        model: SILICONFLOW_RUNTIME_PROVIDER.model,
+        apiVersion: '',
+        apiProviderBaseUrl: SILICONFLOW_RUNTIME_PROVIDER.baseUrl,
+      },
+    },
+  });
+}
+
 export function loadConfig(): AppConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return {
+      return normalizeExecutionConfig({
         ...DEFAULT_CONFIG,
         pet: normalizePet(DEFAULT_PET),
         notifications: normalizeNotifications(DEFAULT_NOTIFICATIONS),
         orbit: normalizeOrbit(DEFAULT_ORBIT),
-      };
+      });
     }
     const parsed = JSON.parse(raw) as Partial<AppConfig>;
     // Strip daemon-owned privacy fields if a stale localStorage payload
@@ -359,14 +505,14 @@ export function loadConfig(): AppConfig {
       merged.configMigrationVersion = CONFIG_MIGRATION_VERSION;
     }
 
-    return merged;
+    return normalizeExecutionConfig(merged);
   } catch {
-    return {
+    return normalizeExecutionConfig({
       ...DEFAULT_CONFIG,
       pet: normalizePet(DEFAULT_PET),
       notifications: normalizeNotifications(DEFAULT_NOTIFICATIONS),
       orbit: normalizeOrbit(DEFAULT_ORBIT),
-    };
+    });
   }
 }
 
@@ -572,7 +718,11 @@ function sanitizeAgentCliEnv(agentCliEnv: AppConfig['agentCliEnv']): AppConfig['
 }
 
 export function saveConfig(config: AppConfig): void {
-  const sanitized: AppConfig = { ...config, agentCliEnv: sanitizeAgentCliEnv(config.agentCliEnv) };
+  const normalized = normalizeExecutionConfig(config);
+  const sanitized: AppConfig = {
+    ...normalized,
+    agentCliEnv: sanitizeAgentCliEnv(normalized.agentCliEnv),
+  };
   for (const key of DAEMON_OWNED_KEYS) {
     delete (sanitized as unknown as Record<string, unknown>)[key];
   }
@@ -584,7 +734,7 @@ export function mergeDaemonConfig(
   daemonConfig: AppConfigPrefs | null,
 ): AppConfig {
   const next = { ...localConfig };
-  if (!daemonConfig) return next;
+  if (!daemonConfig) return normalizeExecutionConfig(next);
 
   if (daemonConfig.onboardingCompleted != null) {
     next.onboardingCompleted = daemonConfig.onboardingCompleted;
@@ -634,7 +784,7 @@ export function mergeDaemonConfig(
   if (daemonConfig.customInstructions !== undefined) {
     next.customInstructions = daemonConfig.customInstructions ?? undefined;
   }
-  return next;
+  return normalizeExecutionConfig(next);
 }
 
 export function mergeDaemonMediaProviders(
@@ -724,20 +874,21 @@ export async function syncConfigToDaemon(
   config: AppConfig,
   options?: { throwOnError?: boolean },
 ): Promise<void> {
+  const normalized = normalizeExecutionConfig(config);
   const prefs: AppConfigPrefs = {
-    onboardingCompleted: config.onboardingCompleted,
-    agentId: config.agentId,
-    agentModels: config.agentModels,
-    agentCliEnv: config.agentCliEnv,
-    skillId: config.skillId,
-    designSystemId: config.designSystemId,
-    disabledSkills: config.disabledSkills,
-    disabledDesignSystems: config.disabledDesignSystems,
-    orbit: normalizeOrbit(config.orbit),
-    installationId: config.installationId,
-    telemetry: config.telemetry,
-    privacyDecisionAt: config.privacyDecisionAt,
-    customInstructions: config.customInstructions ?? null,
+    onboardingCompleted: normalized.onboardingCompleted,
+    agentId: normalized.agentId,
+    agentModels: normalized.agentModels,
+    agentCliEnv: normalized.agentCliEnv,
+    skillId: normalized.skillId,
+    designSystemId: normalized.designSystemId,
+    disabledSkills: normalized.disabledSkills,
+    disabledDesignSystems: normalized.disabledDesignSystems,
+    orbit: normalizeOrbit(normalized.orbit),
+    installationId: normalized.installationId,
+    telemetry: normalized.telemetry,
+    privacyDecisionAt: normalized.privacyDecisionAt,
+    customInstructions: normalized.customInstructions ?? null,
   };
   try {
     const response = await fetch('/api/app-config', {

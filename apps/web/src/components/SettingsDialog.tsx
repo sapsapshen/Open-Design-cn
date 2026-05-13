@@ -13,6 +13,8 @@ import {
 import {
   DEFAULT_NOTIFICATIONS,
   DEFAULT_ORBIT,
+  DEEPSEEK_RUNTIME_PROVIDER,
+  SILICONFLOW_RUNTIME_PROVIDER,
   isStoredMediaProviderEntryEmpty,
   isStoredMediaProviderEntryPresent,
   KNOWN_PROVIDERS,
@@ -1247,7 +1249,11 @@ export function SettingsDialog({
   }, [onClose]);
 
   const protocolProviders = useMemo(
-    () => KNOWN_PROVIDERS.filter((p) => p.protocol === apiProtocol),
+    () => KNOWN_PROVIDERS.filter((p) =>
+      p.protocol === apiProtocol && (
+        (apiProtocol === 'anthropic' && p.baseUrl === DEEPSEEK_RUNTIME_PROVIDER.baseUrl)
+        || (apiProtocol === 'openai' && p.baseUrl === SILICONFLOW_RUNTIME_PROVIDER.baseUrl)
+      )),
     [apiProtocol],
   );
   const selectedProviderIndex =
@@ -1409,7 +1415,7 @@ export function SettingsDialog({
               <Icon name="sliders" size={18} />
               <span>
                 <strong>{t('settings.envConfigure')}</strong>
-                <small>{`${t('settings.localCli')} / ${t('settings.modeApiMeta')}`}</small>
+                <small>DeepSeek / SiliconFlow</small>
               </span>
             </button>
             <button
@@ -1582,62 +1588,23 @@ export function SettingsDialog({
           {activeSection === 'execution' ? (
             <>
               <div
-                className="seg-control"
+                className="protocol-chips"
                 role="tablist"
-                aria-label={t('settings.modeAria')}
-                style={{ ['--seg-cols' as string]: 2 } as CSSProperties}
+                aria-label={t('settings.protocolAria')}
               >
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={cfg.mode === 'daemon'}
-                  className={'seg-btn' + (cfg.mode === 'daemon' ? ' active' : '')}
-                  disabled={!daemonLive}
-                  onClick={() => setMode('daemon')}
-                  title={
-                    daemonLive
-                      ? t('settings.modeDaemonHelp')
-                      : t('settings.modeDaemonOffline')
-                  }
-                >
-                  <span className="seg-title">{t('settings.localCli')}</span>
-                  <span className="seg-meta">
-                    {daemonLive
-                      ? t('settings.modeDaemonInstalledMeta', { count: installedCount })
-                      : t('settings.modeDaemonOfflineMeta')}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={cfg.mode === 'api'}
-                  className={'seg-btn' + (cfg.mode === 'api' ? ' active' : '')}
-                  onClick={() => setMode('api')}
-                >
-                  <span className="seg-title">{t('settings.modeApiMeta')}</span>
-                  <span className="seg-meta">{t('settings.modeApi')}</span>
-                </button>
+                {API_PROTOCOL_TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={apiProtocol === tab.id}
+                    className={'protocol-chip' + (apiProtocol === tab.id ? ' active' : '')}
+                    onClick={() => setApiProtocol(tab.id)}
+                  >
+                    {tab.title}
+                  </button>
+                ))}
               </div>
-              {cfg.mode === 'api' ? (
-                <div
-                  className="protocol-chips"
-                  role="tablist"
-                  aria-label={t('settings.protocolAria')}
-                >
-                  {API_PROTOCOL_TABS.map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={apiProtocol === tab.id}
-                      className={'protocol-chip' + (apiProtocol === tab.id ? ' active' : '')}
-                      onClick={() => setApiProtocol(tab.id)}
-                    >
-                      {tab.title}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
           {cfg.mode === 'daemon' ? (
             <section className="settings-section">
               <div className="section-head">

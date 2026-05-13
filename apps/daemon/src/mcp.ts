@@ -70,20 +70,20 @@ const READ_ANNOTATIONS = {
 // shipped to the model on every session.
 const PROJECT_ARG = {
   type: 'string',
-  description: 'Project id (UUID) or name substring. Optional; defaults to the active project (expires after ~5 minutes of no Open Design activity).',
+  description: 'Project id (UUID) or name substring. Optional; defaults to the active project (expires after ~5 minutes of no Open Design - Chinese Optimized Version activity).',
 } as const;
 
 const TOOL_DEFS = [
   {
     name: 'list_projects',
-    description: 'List every Open Design project on this daemon.',
+    description: 'List every Open Design - Chinese Optimized Version project on this daemon.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-    annotations: { ...READ_ANNOTATIONS, title: 'List Open Design projects' },
+    annotations: { ...READ_ANNOTATIONS, title: 'List Open Design - Chinese Optimized Version projects' },
   },
   {
     name: 'get_active_context',
     description:
-      'Project + file the user has open in Open Design right now. Returns {active:false, hint:"..."} when no project is active so the agent can ask the user to interact with Open Design (the active context expires ~5 minutes after the last user interaction). Most tools default to this when project is omitted, so you rarely need to call this directly.',
+      'Project + file the user has open in Open Design - Chinese Optimized Version right now. Returns {active:false, hint:"..."} when no project is active so the agent can ask the user to interact with Open Design - Chinese Optimized Version (the active context expires ~5 minutes after the last user interaction). Most tools default to this when project is omitted, so you rarely need to call this directly.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     annotations: { ...READ_ANNOTATIONS, title: 'What is the user looking at?' },
   },
@@ -98,8 +98,8 @@ const TOOL_DEFS = [
         entry: {
           type: 'string',
           description:
-            "Entry file path relative to project root. Defaults to the active file or project's metadata.entryFile. Active-file fallback expires after ~5 minutes of no Open Design activity.",
-        },
+            "Entry file path relative to project root. Defaults to the active file or project's metadata.entryFile. Active-file fallback expires after ~5 minutes of no Open Design - Chinese Optimized Version activity.",
+          },
         include: {
           type: 'string',
           enum: ['auto', 'all', 'shallow'],
@@ -124,7 +124,7 @@ const TOOL_DEFS = [
       properties: { project: PROJECT_ARG },
       additionalProperties: false,
     },
-    annotations: { ...READ_ANNOTATIONS, title: 'Get Open Design project' },
+    annotations: { ...READ_ANNOTATIONS, title: 'Get Open Design - Chinese Optimized Version project' },
   },
   {
     name: 'get_file',
@@ -137,7 +137,7 @@ const TOOL_DEFS = [
         path: {
           type: 'string',
           description:
-            'File path relative to project root, forward slashes. Optional; defaults to the active file when project is also omitted. Active-file fallback expires after ~5 minutes of no Open Design activity.',
+            'File path relative to project root, forward slashes. Optional; defaults to the active file when project is also omitted. Active-file fallback expires after ~5 minutes of no Open Design - Chinese Optimized Version activity.',
         },
         offset: {
           type: 'number',
@@ -212,7 +212,7 @@ export async function runMcpStdio({ daemonUrl }: RunMcpOptions): Promise<void> {
     {
       capabilities: { tools: {}, resources: {} },
       instructions: [
-        'Open Design (OD) is a local-first design workspace. The user typically',
+        'Open Design - Chinese Optimized Version (OD) is a local-first design workspace. The user typically',
         'has OD running on their machine; each project contains a rendered',
         'artifact (HTML/JSX/CSS) plus its source files.',
         '',
@@ -253,7 +253,7 @@ export async function runMcpStdio({ daemonUrl }: RunMcpOptions): Promise<void> {
         'available at od://skills/<id>/SKILL.md but are mostly relevant',
         'when the user asks about how a particular artifact was generated.',
         '',
-        'When extending an Open Design design in another codebase, pull',
+        'When extending an Open Design - Chinese Optimized Version design in another codebase, pull',
         'the full bundle once with get_artifact and work from those files',
         'locally - do not fetch files one-by-one if you can avoid it.',
       ].join('\n'),
@@ -272,8 +272,8 @@ export async function runMcpStdio({ daemonUrl }: RunMcpOptions): Promise<void> {
     const resources = [
       {
         uri: 'od://focus/active',
-        name: 'Active Open Design context',
-        description: 'The project/file the user has open in Open Design right now.',
+        name: 'Active Open Design - Chinese Optimized Version context',
+        description: 'The project/file the user has open in Open Design - Chinese Optimized Version right now.',
         mimeType: 'application/json',
       },
     ];
@@ -350,7 +350,7 @@ export async function runMcpStdio({ daemonUrl }: RunMcpOptions): Promise<void> {
           if (!data || data.active === false) {
             return ok({
               active: false,
-              hint: 'Open Design has no active project right now. The active context expires about 5 minutes after the last user interaction with Open Design, so the user may need to click into a project (or switch tabs inside one) to wake it up. Alternatively, pass project="<id-or-name>" to other tools to bypass active context entirely.',
+              hint: 'Open Design - Chinese Optimized Version has no active project right now. The active context expires about 5 minutes after the last user interaction with Open Design - Chinese Optimized Version, so the user may need to click into a project (or switch tabs inside one) to wake it up. Alternatively, pass project="<id-or-name>" to other tools to bypass active context entirely.',
             });
           }
           return ok(data);
@@ -508,7 +508,7 @@ async function resolveProjectArg(baseUrl: string, arg: unknown): Promise<{ id: s
   }
   if (!active || active.active === false || !active.projectId) {
     throw new Error(
-      'project arg omitted and Open Design has no active project. The active context expires about 5 minutes after the last user interaction with Open Design - the user may need to click into a project to wake it up. Otherwise pass project="<id-or-name>".',
+      'project arg omitted and Open Design - Chinese Optimized Version has no active project. The active context expires about 5 minutes after the last user interaction with Open Design - Chinese Optimized Version - the user may need to click into a project to wake it up. Otherwise pass project="<id-or-name>".',
     );
   }
   return { id: active.projectId, resolved: null, active };
@@ -932,7 +932,7 @@ function formatError(err: unknown, daemonUrl: string): string {
   const code = e && (e.cause?.code || e.code);
   const msg = errorMessage(err);
   if (code === 'ECONNREFUSED' || code === 'ENOTFOUND') {
-    return `cannot reach the Open Design daemon at ${daemonUrl}. Is it running? Start it with \`pnpm tools-dev\`.`;
+    return `cannot reach the Open Design - Chinese Optimized Version daemon at ${daemonUrl}. Is it running? Start it with \`pnpm tools-dev\`.`;
   }
   return msg;
 }
