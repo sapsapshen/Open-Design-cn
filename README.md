@@ -1,5 +1,4 @@
-# Open Design - Chinese Optimized Version
-
+# Open Design - cn
 这是基于 [nexu-io/open-design](https://github.com/nexu-io/open-design) 改造的中国优化版。上游项目提供了本地优先的 AI 设计生成框架：Web UI + 本地 daemon + Skills + Design Systems + Artifact 预览。本版本在此基础上，围绕中国大陆用户的实际使用环境做了易用性改造，让项目更容易启动、更容易接入国内可用模型，也更稳定地产出可预览的设计文件。
 
 > 本仓库不是上游官方发布版，而是面向国内使用场景的本地化改造版本。原项目版权、许可证与上游贡献请参考 [nexu-io/open-design](https://github.com/nexu-io/open-design) 和 [LICENSE](LICENSE)。
