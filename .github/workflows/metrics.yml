@@ -30,8 +30,8 @@ jobs:
           # Auth: METRICS_TOKEN must be a fine-grained PAT or GitHub App token that
           # can create pull requests in this repository. GITHUB_TOKEN is kept only
           # as a read/render fallback because many orgs disallow PR creation from it.
-          token: ${{ secrets.METRICS_TOKEN || secrets.GITHUB_TOKEN }}
-          committer_token: ${{ secrets.METRICS_TOKEN }}
+          token: ${{ secrets.METRICS_TOKEN || github.token }}
+          committer_token: ${{ secrets.METRICS_TOKEN || github.token }}
           output_action: pull-request
           output_condition: data-changed
 
@@ -40,8 +40,8 @@ jobs:
           # lowlighter/metrics infers the token owner and treats the target as an org.
           template: repository
           base: ''
-          user: nexu-io
-          repo: open-design
+          user: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
 
           # Plugins. Anything that requires a personal token will silently no-op
           # without METRICS_TOKEN — the rest still produce a useful SVG.

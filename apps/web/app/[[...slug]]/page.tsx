@@ -1,9 +1,4 @@
-import { ClientApp } from './client-app';
-
-export function generateStaticParams() {
-  return [{ slug: [] }];
-}
-
-export default function CatchAllPage() {
-  return <ClientApp />;
-}
+export {
+  CatchAllPage as default,
+  generateSpaShellStaticParams as generateStaticParams,
+} from '../../src/routes/spa-shell-page';
