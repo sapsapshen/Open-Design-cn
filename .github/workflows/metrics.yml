@@ -1,9 +1,6 @@
 name: github-metrics
 
 on:
-  schedule:
-    # Runs daily at 00:15 UTC; output is committed to docs/assets/github-metrics.svg.
-    - cron: '15 0 * * *'
   workflow_dispatch:
   push:
     branches:
@@ -32,7 +29,10 @@ jobs:
           # as a read/render fallback because many orgs disallow PR creation from it.
           token: ${{ secrets.METRICS_TOKEN || github.token }}
           committer_token: ${{ secrets.METRICS_TOKEN || github.token }}
-          output_action: pull-request
+          # Commit directly: GITHUB_TOKEN often cannot open bot PRs on user-owned forks.
+          # Set repository variable METRICS_OUTPUT_ACTION=pull-request and configure
+          # METRICS_TOKEN when you want PR-based updates instead.
+          output_action: ${{ vars.METRICS_OUTPUT_ACTION || 'commit' }}
           output_condition: data-changed
 
           # Use the repository template (per-repo metrics, not user metrics).

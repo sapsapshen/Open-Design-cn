@@ -1,13 +1,9 @@
 name: refresh-contributors-wall
 
 on:
-  # Daily refresh keeps the contributors wall CDN cache moving even when
-  # contributor data changes outside pull request merges.
-  schedule:
-    - cron: '0 1 * * *'
-  # Manual trigger: Use when you need to force-refresh the contributors wall
-  # outside the daily schedule (e.g., after a bulk contributor update or
-  # after fixing the cache_bust pattern in README files).
+  # Scheduled refresh needs a token that can open PRs from Actions. Forks and
+  # repos without METRICS_TOKEN / elevated automation permissions fail nightly
+  # on the PR step, so keep this manual unless you configure that access.
   workflow_dispatch:
 
 permissions:
@@ -47,6 +43,7 @@ jobs:
 
       - name: Create refresh pull request
         if: steps.cache-bust.outputs.changed == 'true'
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ github.token }}
