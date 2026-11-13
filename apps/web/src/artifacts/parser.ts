@@ -23,7 +23,7 @@ export interface InferredHtmlArtifact {
 
 const OPEN_PREFIX = '<artifact';
 const CLOSE_TAG = '</artifact>';
-const HTML_FENCE_RE = /```(?:html)?[^\n]*\n([\s\S]*?)```/gi;
+const HTML_FENCE_PATTERN = '```(?:html)?[^\\n]*\\n([\\s\\S]*?)```';
 
 interface ParserState {
   inside: boolean;
@@ -260,9 +260,11 @@ export function createArtifactParser() {
 
 export function inferHtmlArtifactFromText(content: string): InferredHtmlArtifact | null {
   if (!content) return null;
-  let match: RegExpExecArray | null = HTML_FENCE_RE.exec(content);
+  // A fresh regex on every call. A shared /g pattern keeps lastIndex and
+  // can skip the next document after a previous match.
+  const fence = new RegExp(HTML_FENCE_PATTERN, 'gi');
   let html: string | null = null;
-  while (match !== null) {
+  for (const match of content.matchAll(fence)) {
     const candidate = (match[1] ?? '').trim();
     if (
       /^<!doctype html[\s\S]*<\/html>$/i.test(candidate)
@@ -270,7 +272,6 @@ export function inferHtmlArtifactFromText(content: string): InferredHtmlArtifact
     ) {
       html = candidate;
     }
-    match = HTML_FENCE_RE.exec(content);
   }
   if (!html) return null;
   return {

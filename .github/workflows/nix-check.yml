@@ -50,10 +50,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v27
+        uses: cachix/install-nix-action@v31.11.5
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
@@ -81,7 +81,7 @@ jobs:
 
       - name: Upload build logs (on failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nix-build-logs
           path: |

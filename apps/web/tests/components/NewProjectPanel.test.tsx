@@ -422,7 +422,6 @@ describe('NewProjectPanel design system defaults', () => {
     );
 
     fireEvent.click(screen.getByRole('tab', { name: 'Media' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Image' }));
     fireEvent.change(screen.getByTestId('new-project-name'), {
       target: { value: 'Image payload metadata' },
     });
@@ -442,7 +441,7 @@ describe('NewProjectPanel design system defaults', () => {
     );
   });
 
-  it('saves video creation with the selected aspect and duration metadata', () => {
+  it('keeps the media tab on image generation', () => {
     const onCreate = vi.fn();
     render(
       <NewProjectPanel
@@ -457,142 +456,19 @@ describe('NewProjectPanel design system defaults', () => {
     );
 
     fireEvent.click(screen.getByRole('tab', { name: 'Media' }));
-    fireEvent.click(screen.getByTestId('new-project-media-surface-video'));
+    expect(screen.queryByTestId('new-project-media-surface-video')).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Audio' })).toBeNull();
     fireEvent.change(screen.getByTestId('new-project-name'), {
-      target: { value: 'Video payload metadata' },
-    });
-    fireEvent.click(screen.getByRole('radio', { name: '9:16' }));
-    fireEvent.change(screen.getByLabelText('Length'), {
-      target: { value: '10' },
+      target: { value: 'Image only media' },
     });
     fireEvent.click(screen.getByTestId('create-project'));
 
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'Video payload metadata',
+        name: 'Image only media',
         designSystemId: null,
         metadata: expect.objectContaining({
-          kind: 'video',
-          videoModel: 'doubao-seedance-2-0-260128',
-          videoAspect: '9:16',
-          videoLength: 10,
-        }),
-      }),
-    );
-  });
-
-  it('saves audio creation with the selected duration and trimmed voice metadata', () => {
-    const onCreate = vi.fn();
-    render(
-      <NewProjectPanel
-        skills={skills}
-        designSystems={designSystems}
-        defaultDesignSystemId="clay"
-        templates={[]}
-        onDeleteTemplate={vi.fn()}
-        promptTemplates={[]}
-        onCreate={onCreate}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole('tab', { name: 'Media' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Audio' }));
-    fireEvent.change(screen.getByTestId('new-project-name'), {
-      target: { value: 'Audio payload metadata' },
-    });
-    fireEvent.change(screen.getByLabelText('Duration'), {
-      target: { value: '30' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('Provider voice id, optional'), {
-      target: { value: '  soft contralto guide  ' },
-    });
-    fireEvent.click(screen.getByTestId('create-project'));
-
-    expect(onCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'Audio payload metadata',
-        designSystemId: null,
-        metadata: expect.objectContaining({
-          kind: 'audio',
-          audioKind: 'speech',
-          audioModel: 'minimax-tts',
-          audioDuration: 30,
-          voice: 'soft contralto guide',
-        }),
-      }),
-    );
-  });
-
-  it('pins skillId to hyperframes when the video model is hyperframes-html, regardless of skill discovery order', () => {
-    // Reproduces PR #866 mrcfps's reported regression: when daemon `readdir()`
-    // returns video skills in an order that puts `video-shortform` ahead of
-    // `hyperframes`, the previous `list[0]?.id` fallback would route the
-    // HyperFrames-HTML model through `video-shortform`, dropping the
-    // hyperframes SKILL body and the html-in-canvas preflight. The fix forces
-    // the create-time skillId to `hyperframes` whenever `hyperframes-html` is
-    // the chosen model.
-    const onCreate = vi.fn();
-    const videoSkills: SkillSummary[] = [
-      {
-        id: 'video-shortform',
-        name: 'Video shortform',
-        description: 'Shortform video skill',
-        mode: 'video',
-        surface: 'video',
-        previewType: 'video',
-        designSystemRequired: false,
-        defaultFor: [],
-        triggers: [],
-        upstream: null,
-        hasBody: true,
-        examplePrompt: '',
-        aggregatesExamples: false,
-      },
-      {
-        id: 'hyperframes',
-        name: 'HyperFrames',
-        description: 'HTML-in-canvas video',
-        mode: 'video',
-        surface: 'video',
-        previewType: 'video',
-        designSystemRequired: false,
-        defaultFor: [],
-        triggers: [],
-        upstream: null,
-        hasBody: true,
-        examplePrompt: '',
-        aggregatesExamples: false,
-      },
-    ];
-
-    render(
-      <NewProjectPanel
-        skills={videoSkills}
-        designSystems={designSystems}
-        defaultDesignSystemId="clay"
-        templates={[]}
-        onDeleteTemplate={vi.fn()}
-        promptTemplates={[]}
-        onCreate={onCreate}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole('tab', { name: 'Media' }));
-    fireEvent.click(screen.getByTestId('new-project-media-surface-video'));
-    fireEvent.click(screen.getByTestId('model-picker-trigger'));
-    fireEvent.click(screen.getByTestId('model-picker-option-hyperframes-html'));
-    fireEvent.change(screen.getByTestId('new-project-name'), {
-      target: { value: 'HyperFrames routing' },
-    });
-    fireEvent.click(screen.getByTestId('create-project'));
-
-    expect(onCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'HyperFrames routing',
-        skillId: 'hyperframes',
-        metadata: expect.objectContaining({
-          kind: 'video',
-          videoModel: 'hyperframes-html',
+          kind: 'image',
         }),
       }),
     );

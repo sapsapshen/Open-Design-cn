@@ -15,6 +15,8 @@ import {
   renderCodexImagegenOverride,
   shouldRenderCodexImagegenOverride,
 } from './prompts/system.js';
+import { shouldRouteChatToDeepseekHttp } from './deepseek-http-route.js';
+import { spaShellMiddleware } from './spa-shell.js';
 import { expandHomePrefix, resolveProjectRelativePath } from './home-expansion.js';
 import { createCommandInvocation } from '@open-design/platform';
 import { SIDECAR_DEFAULTS, SIDECAR_ENV } from '@open-design/sidecar-proto';
@@ -2244,6 +2246,7 @@ export async function startServer({
 
   if (fs.existsSync(STATIC_DIR)) {
     app.use(express.static(STATIC_DIR));
+    app.use(spaShellMiddleware(STATIC_DIR));
   }
 
   app.get('/api/health', async (_req, res) => {
@@ -3190,6 +3193,11 @@ export async function startServer({
         return design.runs.finish(run, 'failed', 1, null);
       }
 
+      if (!response.body) {
+        send('error', createSseErrorPayload('UPSTREAM_ERROR', 'DeepSeek API returned an empty response body'));
+        return design.runs.finish(run, 'failed', 1, null);
+      }
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
@@ -3308,15 +3316,15 @@ export async function startServer({
     if (typeof skillId === 'string' && skillId) run.skillId = skillId;
     if (typeof designSystemId === 'string' && designSystemId)
       run.designSystemId = designSystemId;
-    // DeepSeek HTTP mode: if wizardDeepseekKey is configured, use direct
-    // HTTP API instead of spawning an agent CLI.
+    // DeepSeek HTTP mode is opt-in for the DeepSeek agent. A key saved by
+    // the launch wizard must not redirect Claude, Codex, or any other CLI.
     try {
       const appCfg = await readAppConfig(RUNTIME_DATA_DIR);
-      if (appCfg.wizardDeepseekKey) {
+      if (shouldRouteChatToDeepseekHttp(agentId, appCfg.wizardDeepseekKey)) {
         return await runDeepseekChat(chatBody, run, composeDaemonSystemPrompt);
       }
     } catch (_) {
-      // safe to ignore — config read may fail, fall through to agent spawn
+      // Config read failures fall through to the selected agent CLI.
     }
     const def = getAgentDef(agentId);
     if (!def)

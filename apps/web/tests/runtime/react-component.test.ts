@@ -52,7 +52,7 @@ describe('buildReactComponentSrcdoc', () => {
       title: 'App',
     });
     expect(doc).toContain('<!doctype html>');
-    expect(doc).toContain('react@18/umd/react.development.js');
+    expect(doc).toContain('unpkg.zhimg.com/react@18.3.1/umd/react.development.js');
     expect(doc).toContain('@babel/standalone');
     expect(doc).toContain('artifact.tsx');
     expect(doc).toContain('sandboxed iframe');

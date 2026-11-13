@@ -41,7 +41,6 @@ describe('NewProjectPanel media provider badges', () => {
     );
 
     fireEvent.click(screen.getByRole('tab', { name: 'Media' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Image' }));
     // Model picker is now a combobox — open the popover so the
     // provider group + status badge become visible in the DOM.
     fireEvent.click(screen.getByTestId('model-picker-trigger'));

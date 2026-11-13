@@ -76,7 +76,9 @@ jobs:
 
   validate:
     name: Validate workspace
-    runs-on: ubuntu-latest
+    # Playwright 1.59.1 installs Chromium for ubuntu24.04-x64. ubuntu-latest
+    # is Ubuntu 26.04, and that release reports ubuntu26.04-x64 as unsupported.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
 
     steps:
@@ -170,7 +172,9 @@ jobs:
     name: Packaged mac smoke
     needs: [validate, packaged_changes]
     if: ${{ needs.packaged_changes.outputs.required == 'true' }}
-    runs-on: macos-14
+    # macos-14-arm64 is rejected on current GitHub-hosted runners
+    # ("configuration macos-14-arm64-us-default is not supported").
+    runs-on: macos-15
     timeout-minutes: 45
 
     steps:

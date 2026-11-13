@@ -232,7 +232,7 @@ test('clears pending authorization when OAuth launch is blocked after redirect_r
     await githubCard.getByRole('button', { name: 'Connect' }).click();
     await expect(githubCard.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
     await expect(githubCard.getByRole('alert')).toContainText(
-      'Popup blocked. Allow popups for Open Design and try again.',
+      'Popup blocked. Allow popups for Open Design - Chinese Optimized Version and try again.',
     );
     await expect
       .poll(async () =>
