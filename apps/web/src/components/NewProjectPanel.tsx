@@ -586,6 +586,21 @@ export function NewProjectPanel({
         ) : null}
 
 
+        {tab === 'media' ? (
+          <div className="newproj-media-surfaces" role="tablist" aria-label={t('newproj.tabMedia')}>
+            <button
+              type="button"
+              role="tab"
+              data-testid="new-project-media-surface-image"
+              aria-selected={mediaSurface === 'image'}
+              className={mediaSurface === 'image' ? 'active' : ''}
+              onClick={() => setMediaSurface('image')}
+            >
+              {t(MEDIA_SURFACE_LABEL_KEYS.image)}
+            </button>
+          </div>
+        ) : null}
+
         {tab === 'media' && mediaSurface === 'image' ? (
           <PromptTemplatePicker
             surface="image"
