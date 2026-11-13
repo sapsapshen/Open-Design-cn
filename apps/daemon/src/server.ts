@@ -16,6 +16,7 @@ import {
   shouldRenderCodexImagegenOverride,
 } from './prompts/system.js';
 import { shouldRouteChatToDeepseekHttp } from './deepseek-http-route.js';
+import { spaShellMiddleware } from './spa-shell.js';
 import { expandHomePrefix, resolveProjectRelativePath } from './home-expansion.js';
 import { createCommandInvocation } from '@open-design/platform';
 import { SIDECAR_DEFAULTS, SIDECAR_ENV } from '@open-design/sidecar-proto';
@@ -2245,6 +2246,7 @@ export async function startServer({
 
   if (fs.existsSync(STATIC_DIR)) {
     app.use(express.static(STATIC_DIR));
+    app.use(spaShellMiddleware(STATIC_DIR));
   }
 
   app.get('/api/health', async (_req, res) => {

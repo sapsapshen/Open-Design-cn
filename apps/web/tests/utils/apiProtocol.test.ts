@@ -8,14 +8,14 @@ import {
 
 describe('api protocol labels', () => {
   it('labels the selected API protocol instead of assuming Anthropic', () => {
-    expect(apiProtocolLabel('openai')).toBe('OpenAI API');
+    expect(apiProtocolLabel('openai')).toBe('SiliconFlow');
     expect(apiProtocolLabel('google')).toBe('Google Gemini');
-    expect(apiProtocolLabel(undefined)).toBe('Anthropic API');
+    expect(apiProtocolLabel(undefined)).toBe('DeepSeek');
   });
 
   it('includes the selected model when labeling API assistant messages', () => {
     expect(apiProtocolModelLabel('openai', 'google/gemma-4-e4b')).toBe(
-      'OpenAI API · google/gemma-4-e4b',
+      'SiliconFlow · google/gemma-4-e4b',
     );
     expect(apiProtocolModelLabel('azure', '  ')).toBe('Azure OpenAI');
   });

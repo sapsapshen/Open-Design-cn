@@ -311,8 +311,8 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
   it('renders BYOK protocol tabs and toggles API key visibility', () => {
     renderSettingsDialog();
 
-    expect(screen.getByRole('tab', { name: 'Anthropic' }).getAttribute('aria-selected')).toBe('true');
-    expect(screen.getByRole('tab', { name: 'OpenAI' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'DeepSeek' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: 'SiliconFlow' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Azure OpenAI' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Google Gemini' })).toBeTruthy();
     expect(screen.getByLabelText('Quick fill provider')).toBeTruthy();
@@ -332,9 +332,9 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
   it('updates model and base URL when quick fill provider changes', () => {
     renderSettingsDialog({ apiProtocol: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o', apiProviderBaseUrl: 'https://api.openai.com/v1' });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     fireEvent.change(screen.getByLabelText('Quick fill provider'), {
-      target: { value: '1' },
+      target: { value: '2' },
     });
 
     expect((screen.getByLabelText('Model') as HTMLSelectElement).value).toBe('deepseek-chat');
@@ -344,9 +344,9 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
   it('treats a manually edited base URL as a custom provider', () => {
     renderSettingsDialog({ apiProtocol: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o', apiProviderBaseUrl: 'https://api.openai.com/v1' });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     const providerSelect = screen.getByLabelText('Quick fill provider') as HTMLSelectElement;
-    expect(providerSelect.value).toBe('0');
+    expect(providerSelect.value).toBe('1');
 
     fireEvent.change(screen.getByLabelText('Base URL'), {
       target: { value: 'https://my-proxy.example.com/v1' },
@@ -364,16 +364,16 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
     const apiKeyInput = screen.getByLabelText('API key') as HTMLInputElement;
     expect(apiKeyInput.value).toBe('anthropic-key');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     expect((screen.getByLabelText('API key') as HTMLInputElement).value).toBe('');
     fireEvent.change(screen.getByLabelText('API key'), {
       target: { value: 'openai-key' },
     });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Anthropic' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'DeepSeek' }));
     expect((screen.getByLabelText('API key') as HTMLInputElement).value).toBe('anthropic-key');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     expect((screen.getByLabelText('API key') as HTMLInputElement).value).toBe('openai-key');
   });
 
@@ -513,7 +513,7 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
       apiProviderBaseUrl: 'https://api.openai.com/v1',
     });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     const fetchButton = screen.getByRole('button', { name: 'Fetch models' }) as HTMLButtonElement;
     expect(fetchButton.disabled).toBe(true);
 
@@ -552,7 +552,7 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
       apiProviderBaseUrl: 'https://api.openai.com/v1',
     });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     expect((screen.getByLabelText('Custom model id') as HTMLInputElement).value).toBe('custom-still-here');
 
     fireEvent.click(screen.getByRole('button', { name: 'Fetch models' }));
@@ -594,7 +594,7 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
       apiProviderBaseUrl: 'https://api.openai.com/v1',
     });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     fireEvent.click(screen.getByRole('button', { name: 'Fetch models' }));
     expect(await screen.findByText('Fetched 1 models.')).toBeTruthy();
 
@@ -623,7 +623,7 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
       apiProviderBaseUrl: 'https://api.openai.com/v1',
     });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     fireEvent.click(screen.getByRole('button', { name: 'Fetch models' }));
 
     expect(await screen.findByText('Authentication failed. Check your API key.')).toBeTruthy();
@@ -632,7 +632,7 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
   it('supports custom model entry in BYOK mode', async () => {
     const { onPersist } = renderSettingsDialog({ apiProtocol: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o', apiProviderBaseUrl: 'https://api.openai.com/v1' });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'OpenAI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'SiliconFlow' }));
     fireEvent.change(screen.getByLabelText('API key'), {
       target: { value: 'sk-openai' },
     });
@@ -1387,7 +1387,7 @@ describe('SettingsDialog MCP server interactions', () => {
       expect(screen.getByText(/claude mcp add-json --scope user open-design/i)).toBeTruthy();
     });
     expect(screen.getByText(/Restart your client to pick up the new server/i)).toBeTruthy();
-    expect(screen.getByText(/Open Design must be running for MCP tool calls to succeed/i)).toBeTruthy();
+    expect(screen.getByText(/Open Design - Chinese Optimized Version must be running for MCP tool calls to succeed/i)).toBeTruthy();
   });
 
   it('switches client instructions and snippet content when a different MCP client is selected', async () => {

@@ -120,6 +120,9 @@ export const API_PROTOCOL_TABS: ReadonlyArray<{
 }> = [
   { id: 'anthropic', title: 'DeepSeek' },
   { id: 'openai', title: 'SiliconFlow' },
+  { id: 'azure', title: 'Azure OpenAI' },
+  { id: 'google', title: 'Google Gemini' },
+  { id: 'ollama', title: 'Ollama Cloud' },
 ];
 
 export const API_PROTOCOL_LABELS: Record<ApiProtocol, string> = {
