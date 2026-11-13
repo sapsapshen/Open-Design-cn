@@ -15,6 +15,7 @@ const e2eRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const workspaceRoot = dirname(e2eRoot);
 const toolsPackDir = resolveFromWorkspace(process.env.OD_PACKAGED_E2E_TOOLS_PACK_DIR ?? '.tmp/tools-pack');
 const namespace = process.env.OD_PACKAGED_E2E_NAMESPACE ?? 'release-beta-win';
+const WINDOWS_PRODUCT_NAME = 'Open Design - Chinese Optimized Version';
 const toolsPackBin = join(workspaceRoot, 'tools', 'pack', 'bin', 'tools-pack.mjs');
 const maxInstallDurationMs = Number.parseInt(process.env.OD_PACKAGED_E2E_WIN_MAX_INSTALL_MS ?? '120000', 10);
 const installIdentity = resolveInstallIdentity(namespace);
@@ -160,7 +161,7 @@ winDescribe('packaged windows runtime smoke', () => {
       expect(basename(install.startMenuShortcutPath)).toBe(`${installIdentity.displayName}.lnk`);
       expect(install.registryEntries.length).toBeGreaterThan(0);
       expect(JSON.stringify(install.registryEntries)).toContain(installIdentity.displayName);
-      expect(JSON.stringify(install.registryEntries)).toContain(`Open Design-${installIdentity.namespaceToken}`);
+      expect(JSON.stringify(install.registryEntries)).toContain(`${installIdentity.productName}-${installIdentity.namespaceToken}`);
       expect(install.installPayload.fileCount).toBeGreaterThan(0);
       expect(install.installPayload.totalBytes).toBeGreaterThan(0);
       expect(install.installPayload.topLevel.length).toBeGreaterThan(0);
@@ -479,14 +480,14 @@ function resolveFromWorkspace(filePath: string): string {
   return isAbsolute(filePath) ? filePath : resolve(workspaceRoot, filePath);
 }
 
-function resolveInstallIdentity(value: string): { displayName: string; namespaceToken: string } {
+function resolveInstallIdentity(value: string): { displayName: string; namespaceToken: string; productName: string } {
   const namespaceToken = value.replace(/[^A-Za-z0-9._-]+/g, '-');
   const displayName = /(^|[-_.])beta($|[-_.])/i.test(value)
-    ? 'Open Design Beta'
+    ? `${WINDOWS_PRODUCT_NAME} Beta`
     : value === 'default'
-      ? 'Open Design'
-      : `Open Design ${namespaceToken}`;
-  return { displayName, namespaceToken };
+      ? WINDOWS_PRODUCT_NAME
+      : `${WINDOWS_PRODUCT_NAME} ${namespaceToken}`;
+  return { displayName, namespaceToken, productName: WINDOWS_PRODUCT_NAME };
 }
 
 function delay(ms: number): Promise<void> {
