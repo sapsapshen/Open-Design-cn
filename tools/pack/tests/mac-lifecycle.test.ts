@@ -7,7 +7,7 @@ import type { ChildProcess } from "node:child_process";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ToolPackConfig } from "../src/config.js";
-import { resolveMacPaths } from "../src/mac/paths.js";
+import { macAppExecutablePath, resolveMacPaths } from "../src/mac/paths.js";
 
 const requestJsonIpc = vi.fn(async () => ({ state: "running" }));
 const resolveAppIpcPath = vi.fn(() => "/tmp/open-design/ipc/test/desktop.sock");
@@ -87,7 +87,7 @@ describe("startPackedMacApp", () => {
     try {
       const config = makeConfig(root);
       const paths = resolveMacPaths(config);
-      const executablePath = join(paths.installedAppPath, "Contents", "MacOS", "Open Design");
+      const executablePath = macAppExecutablePath(paths.installedAppPath);
 
       await mkdir(join(paths.installedAppPath, "Contents", "MacOS"), { recursive: true });
       await writeFile(executablePath, "#!/bin/sh\nexit 0\n", "utf8");
@@ -113,7 +113,7 @@ describe("startPackedMacApp", () => {
     try {
       const config = makeConfig(root);
       const paths = resolveMacPaths(config);
-      const executablePath = join(paths.installedAppPath, "Contents", "MacOS", "Open Design");
+      const executablePath = macAppExecutablePath(paths.installedAppPath);
       const bundledConfigPath = join(paths.installedAppPath, "Contents", "Resources", "open-design-config.json");
 
       await mkdir(join(paths.installedAppPath, "Contents", "MacOS"), { recursive: true });
