@@ -172,7 +172,9 @@ jobs:
     name: Packaged mac smoke
     needs: [validate, packaged_changes]
     if: ${{ needs.packaged_changes.outputs.required == 'true' }}
-    runs-on: macos-14
+    # macos-14-arm64 is rejected on current GitHub-hosted runners
+    # ("configuration macos-14-arm64-us-default is not supported").
+    runs-on: macos-15
     timeout-minutes: 45
 
     steps:
