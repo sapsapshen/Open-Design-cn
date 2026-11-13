@@ -52,7 +52,7 @@
 ### 环境要求
 
 - macOS 推荐，也可按上游方式在其他平台运行。
-- Node.js `~24`，版本要求写在 [.node-version](.node-version)。
+- Node.js 24（`~24`），版本要求写在 [.node-version](.node-version)。`start-open-design.command` 和 `stop-open-design.command` 会在启动前检查主版本号。
 - pnpm `>=10.33.2 <11`，当前 [package.json](package.json) 使用 `pnpm@10.33.2`。
 
 确认版本：
@@ -108,6 +108,8 @@ pnpm tools-dev stop
 | SiliconFlow | OpenAI-compatible 模型入口 | `https://api.siliconflow.cn/v1` | `Qwen/Qwen2.5-7B-Instruct` |
 
 点击 `Test connection` 通过后再继续。配置会保存在本机 `.od/app-config.json`，不要把 `.od/` 或任何 API Key 提交到公开仓库。
+
+向导保存的 DeepSeek Key 只用于 API 模式，以及你在本地代理里明确选择 DeepSeek 的时候。它不会改写 Claude、Codex 或其他本地 CLI 的启动路径。
 
 如果暂时没有 Key，也可以跳过向导，稍后在设置中补充。
 
@@ -183,6 +185,14 @@ pnpm tools-dev logs
 ```
 
 再检查 `.od/projects/<project-id>/` 下是否生成了 `index.html`。
+
+### 选了本地 CLI，对话却走到了 DeepSeek
+
+当前版本只在代理 ID 为 `deepseek` 时走 DeepSeek HTTP。保存过向导 Key 之后，再在顶栏选择其他本地代理，请求会按那个代理自己的 CLI 启动。
+
+### 视频或音频项目没有生成文件
+
+界面仍然可以创建 video / audio 项目，系统提示词也会带上模型、时长和参考模板。这个构建里的媒体分发器目前只执行 `image` 表面；`--surface video` 或 `--surface audio` 会被拒绝。看到拒绝信息后应把错误原文返回，不要用 HTML 页面代替视频或音频文件。
 
 ### 生成的 PPT 出现黑色方块
 

@@ -12,6 +12,16 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 
+node_version="$(node -v)"
+node_major="${node_version#v}"
+node_major="${node_major%%.*}"
+if [[ "$node_major" != "24" ]]; then
+  echo "Node.js 24 is required (found $node_version). The pinned version is in .node-version."
+  echo
+  read '?Press Enter to close...'
+  exit 1
+fi
+
 if command -v pnpm >/dev/null 2>&1; then
   pnpm_cmd=(pnpm)
 elif command -v corepack >/dev/null 2>&1; then

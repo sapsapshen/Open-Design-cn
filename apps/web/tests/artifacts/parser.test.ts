@@ -216,4 +216,27 @@ describe('createArtifactParser', () => {
     expect(inferred?.html).toContain('<!doctype html>');
     expect(inferred?.html).toContain('<body><main>Deck</main></body>');
   });
+
+  it('keeps recovering HTML across repeated calls and ignores earlier non-document fences', () => {
+    const first = [
+      'Notes:',
+      '```js',
+      'const example = "<html></html>";',
+      '```',
+      '```html',
+      '<!doctype html>',
+      '<html><body><p>First</p></body></html>',
+      '```',
+    ].join('\n');
+    const second = [
+      '```html',
+      '<!doctype html>',
+      '<html><body><p>Second</p></body></html>',
+      '```',
+    ].join('\n');
+
+    expect(inferHtmlArtifactFromText(first)?.html).toContain('<p>First</p>');
+    expect(inferHtmlArtifactFromText(second)?.html).toContain('<p>Second</p>');
+    expect(inferHtmlArtifactFromText('No fence here.')).toBeNull();
+  });
 });

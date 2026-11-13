@@ -302,10 +302,18 @@ export function composeSystemPrompt({
     parts.push(`\n\n---\n\n${DECK_FRAMEWORK_DIRECTIVE}`);
   }
 
+  // Image generation is the only surface the dispatcher currently executes.
+  // Video and audio projects still need to be treated as media so Critique
+  // Theater's HTML panel is not appended, but they must not inherit the
+  // image contract — that text tells the agent this project is an image.
+  const isImageSurface = skillMode === 'image' || metadata?.kind === 'image';
   const isMediaSurface =
-    skillMode === 'image' ||
-    metadata?.kind === 'image';
-  if (isMediaSurface) {
+    isImageSurface ||
+    skillMode === 'video' ||
+    skillMode === 'audio' ||
+    metadata?.kind === 'video' ||
+    metadata?.kind === 'audio';
+  if (isImageSurface) {
     parts.push(MEDIA_GENERATION_CONTRACT);
   }
 
@@ -325,10 +333,10 @@ export function composeSystemPrompt({
   // needs to opt in.
   //
   // The panel block requires <ARTIFACT mime="text/html"> inside <CRITIQUE_RUN>,
-  // which conflicts with MEDIA_GENERATION_CONTRACT (image surfaces
-  // explicitly forbid HTML output). Skip the addendum on media surfaces so
-  // the critique flag is a no-op there until a media-aware panel template
-  // lands.
+  // which conflicts with media projects (image, video, and audio all forbid
+  // HTML stand-ins for the generated file). Skip the addendum on those
+  // surfaces so the critique flag is a no-op until a media-aware panel
+  // template lands.
   const cfg = critique ?? defaultCritiqueConfig();
   if (cfg.enabled && critiqueBrand && critiqueSkill && !isMediaSurface) {
     parts.push('\n\n' + renderPanelPrompt({ cfg, brand: critiqueBrand, skill: critiqueSkill }));
@@ -604,6 +612,59 @@ function renderMetadataBlock(
       'This is an **image** project. Plan the prompt carefully, then dispatch via the **media generation contract** using `"$OD_NODE_BIN" "$OD_BIN" media generate --surface image --model <imageModel>`. Do NOT emit `<artifact>` HTML for media surfaces.',
     );
   }
+  if (metadata.kind === 'video') {
+    lines.push(
+      `- **videoModel**: ${metadata.videoModel ?? '(unknown — ask: which video model to use)'}`,
+    );
+    lines.push(
+      `- **lengthSeconds**: ${typeof metadata.videoLength === 'number' ? metadata.videoLength : '(unknown — ask: 3s / 5s / 10s)'}`,
+    );
+    lines.push(
+      `- **aspectRatio**: ${metadata.videoAspect ?? '(unknown — ask: 16:9, 9:16, 1:1)'}`,
+    );
+    if (
+      metadata.promptTemplate?.title &&
+      typeof metadata.promptTemplate.prompt === 'string' &&
+      metadata.promptTemplate.prompt.trim().length > 0
+    ) {
+      lines.push(`- **referenceTemplate**: ${metadata.promptTemplate.title}`);
+    }
+    lines.push('');
+    lines.push(
+      'This is a **video** project. Plan the shotlist and motion, then dispatch via the **media generation contract** using `"$OD_NODE_BIN" "$OD_BIN" media generate --surface video --model <videoModel> --length <seconds> --aspect <ratio>`. Do NOT emit `<artifact>` HTML.',
+    );
+    lines.push(
+      'This build\'s media dispatcher currently executes the image surface only. If `--surface video` is rejected, quote that error and stop; do not substitute an HTML page for the video file.',
+    );
+    if (metadata.videoModel === 'hyperframes-html') {
+      lines.push(
+        'Special case: `hyperframes-html` is a local HTML-to-MP4 renderer, not a photoreal text-to-video model. Treat it like a motion design renderer, ask at most one clarifying question, then dispatch immediately.',
+      );
+    }
+  }
+  if (metadata.kind === 'audio') {
+    lines.push(
+      `- **audioKind**: ${metadata.audioKind ?? '(unknown — ask: music / speech / sfx)'}`,
+    );
+    lines.push(
+      `- **audioModel**: ${metadata.audioModel ?? '(unknown — ask: which audio model to use)'}`,
+    );
+    lines.push(
+      `- **durationSeconds**: ${typeof metadata.audioDuration === 'number' ? metadata.audioDuration : '(unknown — ask: target duration)'}`,
+    );
+    if (metadata.voice) {
+      lines.push(`- **voice**: ${metadata.voice}`);
+    } else if (metadata.audioKind === 'speech') {
+      lines.push('- **voice**: (unknown — ask: voice id / accent / pacing)');
+    }
+    lines.push('');
+    lines.push(
+      'This is an **audio** project. Lock the content intent first, then dispatch via the **media generation contract** using `"$OD_NODE_BIN" "$OD_BIN" media generate --surface audio --audio-kind <kind> --model <audioModel> --duration <seconds>` and add `--voice <voice-id>` for speech when you have a provider-specific voice id. Do NOT emit `<artifact>` HTML.',
+    );
+    lines.push(
+      'This build\'s media dispatcher currently executes the image surface only. If `--surface audio` is rejected, quote that error and stop; do not substitute an HTML page for the audio file.',
+    );
+  }
 
   if (metadata.inspirationDesignSystemIds && metadata.inspirationDesignSystemIds.length > 0) {
     lines.push(
@@ -611,13 +672,13 @@ function renderMetadataBlock(
     );
   }
 
-  // Curated prompt template reference for image projects. Inlined
+  // Curated prompt template reference for image/video projects. Inlined
   // verbatim (with light truncation) so the agent can borrow structure,
   // mood and phrasing without a separate fetch. The user may have edited
   // the body before clicking Create — those edits land here and are now
   // authoritative for the brief.
   if (
-    metadata.kind === 'image' &&
+    (metadata.kind === 'image' || metadata.kind === 'video') &&
     metadata.promptTemplate &&
     typeof metadata.promptTemplate.prompt === 'string' &&
     metadata.promptTemplate.prompt.trim().length > 0

@@ -98,6 +98,27 @@ describe('composeSystemPrompt', () => {
     expect(prompt).toContain('## Active skill — hyperframes');
     expect(prompt).toContain('**Pre-flight (do this before any other tool):**');
     expect(prompt).toContain('`references/html-in-canvas.md`');
+    expect(prompt).toContain('**videoModel**: hyperframes-html');
+    expect(prompt).not.toContain('This project is an **image** surface');
+  });
+
+  it('keeps audio metadata out of the image generation contract', () => {
+    const prompt = composeSystemPrompt({
+      metadata: {
+        kind: 'audio',
+        audioKind: 'speech',
+        audioModel: 'demo-voice',
+        audioDuration: 8,
+        voice: 'alloy',
+      } as any,
+    });
+
+    expect(prompt).toContain('**audioKind**: speech');
+    expect(prompt).toContain('**audioModel**: demo-voice');
+    expect(prompt).toContain('**durationSeconds**: 8');
+    expect(prompt).toContain('**voice**: alloy');
+    expect(prompt).toContain('Do NOT emit `<artifact>` HTML');
+    expect(prompt).not.toContain('This project is an **image** surface');
   });
 
   it('does not add the responsive web contract to deck metadata without platform fields', () => {
